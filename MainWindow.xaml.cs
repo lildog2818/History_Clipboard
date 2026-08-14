@@ -47,15 +47,60 @@ public partial class MainWindow : Window
         if (!_suppressAutoHide) HideBar();
     }
 
+    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            ToggleMaximize();
+            return;
+        }
+        if (e.LeftButton == MouseButtonState.Pressed && WindowState != WindowState.Maximized)
+            DragMove();
+    }
+
+    private void ToggleMaximize()
+    {
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        MaxBtn.Content = WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+    }
+
+    private void Max_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
+
+    private void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        _suppressAutoHide = true;
+        try
+        {
+            var win = new SettingsWindow { Owner = this };
+            win.ShowDialog();
+        }
+        finally
+        {
+            _suppressAutoHide = false;
+        }
+        ShowBar();
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e) => HideBar();
+
+    private void Clear_Click(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Clear();
+        SearchBox.Focus();
+    }
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         Hint.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Visible : Visibility.Collapsed;
+        ClearBtn.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Collapsed : Visibility.Visible;
         Refresh();
     }
 
     private void Refresh()
     {
         var q = SearchBox.Text.Trim();
+        HighlightConverter.CurrentQuery = q;
+
         IEnumerable<ClipEntry> items = Services.Store.Entries;
         if (q.Length > 0)
             items = items.Where(e => Matches(e, q)).ToList();
@@ -73,7 +118,6 @@ public partial class MainWindow : Window
     {
         return e.PlainText.Contains(q, StringComparison.OrdinalIgnoreCase)
             || (e.Note?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (e.OcrText?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false)
             || e.Tags.Any(t => t.Contains(q, StringComparison.OrdinalIgnoreCase));
     }
 
@@ -178,6 +222,39 @@ public partial class MainWindow : Window
         if (entry != null) PasteSelected(false);
     }
 
+    private void List_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var entry = Selected;
+        if (entry == null)
+        {
+            PreviewPanel.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        PreviewPanel.Visibility = Visibility.Visible;
+        if (entry.IsImage)
+        {
+            PreviewText.Visibility = Visibility.Collapsed;
+            PreviewFiles.Visibility = Visibility.Collapsed;
+            PreviewImage.Visibility = Visibility.Visible;
+            PreviewImage.Source = Paster.LoadBitmap(entry);
+        }
+        else if (entry.IsFileList)
+        {
+            PreviewText.Visibility = Visibility.Collapsed;
+            PreviewImage.Visibility = Visibility.Collapsed;
+            PreviewFiles.Visibility = Visibility.Visible;
+            PreviewFiles.ItemsSource = entry.Files;
+        }
+        else
+        {
+            PreviewImage.Visibility = Visibility.Collapsed;
+            PreviewFiles.Visibility = Visibility.Collapsed;
+            PreviewText.Visibility = Visibility.Visible;
+            PreviewText.Text = entry.PlainText;
+        }
+    }
+
     private void List_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
     {
         var item = ItemsControl.ContainerFromElement(List, e.OriginalSource as DependencyObject) as ListBoxItem;
@@ -190,7 +267,7 @@ public partial class MainWindow : Window
         menu.Items.Add(NewMenuItem("粘贴", () => PasteSelected(false)));
         menu.Items.Add(NewMenuItem("粘贴为纯文本", () => PasteSelected(true)));
         menu.Items.Add(new Separator());
-        menu.Items.Add(NewMenuItem(entry.IsImage ? "复制图中文字" : "复制文字", CopySelected));
+        menu.Items.Add(NewMenuItem(entry.IsImage ? "复制图片" : "复制文字", CopySelected));
         if (entry.IsImage)
             menu.Items.Add(NewMenuItem("贴图", () => OpenPinnedImage(entry)));
         menu.Items.Add(new Separator());
@@ -226,15 +303,14 @@ public partial class MainWindow : Window
         Services.Paster.Paste(entry, plain);
     }
 
-    private async void CopySelected()
+    private void CopySelected()
     {
         var entry = Selected;
         if (entry == null) return;
         if (entry.IsImage)
         {
-            var text = await OcrService.GetOrRecognizeAsync(entry);
-            if (string.IsNullOrEmpty(text)) return;
-            Services.Writer.SetText(text);
+            var bmp = Paster.LoadBitmap(entry);
+            if (bmp != null) Services.Writer.SetImage(bmp);
         }
         else
         {
@@ -292,11 +368,11 @@ public partial class MainWindow : Window
             WindowStyle = WindowStyle.SingleBorderWindow
         };
         var sp = new StackPanel { Margin = new Thickness(14) };
-        sp.Children.Add(new TextBlock { Text = "备注：" });
-        var noteBox = new TextBox { Text = currentNote, Margin = new Thickness(0, 4, 0, 10) };
+        sp.Children.Add(new TextBlock { Text = "备注：", FontSize = 14 });
+        var noteBox = new TextBox { Text = currentNote, Margin = new Thickness(0, 4, 0, 10), FontSize = 14 };
         sp.Children.Add(noteBox);
-        sp.Children.Add(new TextBlock { Text = "标签（用空格分隔）：" });
-        var tagBox = new TextBox { Text = currentTags, Margin = new Thickness(0, 4, 0, 12) };
+        sp.Children.Add(new TextBlock { Text = "标签（用空格分隔）：", FontSize = 14 });
+        var tagBox = new TextBox { Text = currentTags, Margin = new Thickness(0, 4, 0, 12), FontSize = 14 };
         sp.Children.Add(tagBox);
         var btns = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var ok = new Button { Content = "确定", Width = 72, Margin = new Thickness(0, 0, 8, 0) };

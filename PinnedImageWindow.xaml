@@ -3,8 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
-        PreviewKeyDown="Window_PreviewKeyDown">
+        PreviewKeyDown="Window_PreviewKeyDown"
+        MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave">
     <Border Background="#14000000" BorderBrush="#66000000" BorderThickness="1">
-        <Image x:Name="Img" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <Grid>
+            <Image x:Name="Img" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Button x:Name="CloseBtn" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                    Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="4"
+                    Background="#AA000000" Foreground="White" BorderThickness="0" Cursor="Hand"
+                    Click="Close_Click" Visibility="Collapsed"/>
+        </Grid>
     </Border>
 </Window>

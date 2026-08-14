@@ -1,0 +1,115 @@
+<Window x:Class="ClipboardHistory.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:local="clr-namespace:ClipboardHistory"
+        Title="设置" Width="560" Height="660"
+        WindowStyle="None" AllowsTransparency="False" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowActivated="True" Loaded="Window_Loaded">
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="0"
+                            CornerRadius="10" UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+    <Border Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1" CornerRadius="10">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Height="42" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <TextBlock Text="设置" FontSize="14" FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                <Button Style="{StaticResource WinBtnClose}" Content="&#xE8BB;" HorizontalAlignment="Right"
+                        VerticalAlignment="Center" Margin="0,0,6,0" Click="Close_Click"/>
+            </Grid>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="4,0,4,0">
+                <StackPanel Margin="12,2,12,8">
+                    <TextBlock Text="快捷键" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,12,0,6"/>
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="唤起搜索" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <local:HotkeyBox Grid.Column="1" x:Name="SearchHotkeyBox"/>
+                    </Grid>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="截图" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <local:HotkeyBox Grid.Column="1" x:Name="ScreenshotHotkeyBox"/>
+                    </Grid>
+
+                    <TextBlock Text="外观" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="主题" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <ComboBox Grid.Column="1" x:Name="ThemeCombo" Height="34" FontSize="14"/>
+                    </Grid>
+
+                    <TextBlock Text="存储" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="保存目录" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <TextBox Grid.Column="1" x:Name="DataDirBox" Height="34" VerticalContentAlignment="Center" FontSize="13"/>
+                        <Button Grid.Column="2" Content="浏览…" Height="34" Margin="8,0,0,0" Padding="12,0" Click="Browse_Click"/>
+                    </Grid>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="条数上限" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <ComboBox Grid.Column="1" x:Name="MaxEntriesCombo" Height="34" FontSize="14"/>
+                    </Grid>
+
+                    <TextBlock Text="行为" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
+                    <CheckBox x:Name="RestoreClipboardBox" Content="粘贴后还原剪贴板" FontSize="14" Margin="0,4,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                    <CheckBox x:Name="QuickPasteBox" Content="1-9 快速粘贴" FontSize="14" Margin="0,8,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                    <CheckBox x:Name="PlainTextOnlyBox" Content="仅记录纯文本（不存富文本格式）" FontSize="14" Margin="0,8,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+
+                    <TextBlock Text="隐私" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
+                    <TextBlock Text="不记录以下应用的复制内容（进程名，如 KeePass）" FontSize="12"
+                               Foreground="{DynamicResource SecondaryBrush}" Margin="0,2,0,4"/>
+                    <ListBox x:Name="ExcludedList" Height="90" FontSize="13" BorderBrush="{DynamicResource BorderBrush}"
+                             Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource ForegroundBrush}"/>
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="ExcludedInput" Height="34" VerticalContentAlignment="Center" FontSize="13" PreviewKeyDown="ExcludedInput_KeyDown"/>
+                        <Button Grid.Column="1" Content="添加" Height="34" Margin="8,0,0,0" Padding="12,0" Click="AddExcluded_Click"/>
+                        <Button Grid.Column="2" Content="移除" Height="34" Margin="8,0,0,0" Padding="12,0" Click="RemoveExcluded_Click"/>
+                    </Grid>
+
+                    <TextBlock Text="常规" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
+                    <CheckBox x:Name="AutoStartBox" Content="开机自启" FontSize="14" Margin="0,4,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Grid Grid.Row="2" Margin="14,8,14,12">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="取消" Width="80" Height="34" Margin="0,0,8,0" Click="Cancel_Click"/>
+                    <Button Content="保存" Width="80" Height="34" Background="{DynamicResource AccentBrush}"
+                            Foreground="White" Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

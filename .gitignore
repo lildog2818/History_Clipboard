@@ -26,6 +26,7 @@ images/
 # ---- 调试符号与缓存 ----
 *.pdb
 *.cache
+*.log
 
 # ---- 操作系统杂项 ----
 Thumbs.db

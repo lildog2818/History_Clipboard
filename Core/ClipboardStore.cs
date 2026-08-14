@@ -48,9 +48,25 @@ public sealed class ClipboardStore : IDisposable
 
     public void Add(ClipEntry entry)
     {
-        lock (_lock) _entries.Insert(0, entry);
+        lock (_lock)
+        {
+            _entries.Insert(0, entry);
+            TrimToLimitLocked();
+        }
         ScheduleSave();
         Changed?.Invoke();
+    }
+
+    private void TrimToLimitLocked()
+    {
+        int max = _settings.Current.MaxEntries;
+        if (max <= 0) return;
+        var overflow = _entries.Where(e => !e.Pinned).Skip(max).ToList();
+        foreach (var e in overflow)
+        {
+            if (e.ImageFile != null) TryDeleteFile(ResolveImage(e.ImageFile));
+            _entries.Remove(e);
+        }
     }
 
     public ClipEntry AddImageEntry(byte[] pngBytes)
@@ -126,16 +142,6 @@ public sealed class ClipboardStore : IDisposable
         }
         ScheduleSave();
         Changed?.Invoke();
-    }
-
-    public void SetOcrText(Guid id, string text)
-    {
-        lock (_lock)
-        {
-            var e = _entries.FirstOrDefault(x => x.Id == id);
-            if (e != null) e.OcrText = text ?? "";
-        }
-        ScheduleSave();
     }
 
     public string? SaveImagePng(byte[] pngBytes, Guid id)

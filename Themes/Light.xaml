@@ -1,11 +1,14 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="PanelBackground" Color="#F2FFFFFF"/>
-    <SolidColorBrush x:Key="ForegroundBrush" Color="#FF1F1F1F"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="#FF6B6B6B"/>
-    <SolidColorBrush x:Key="BorderBrush" Color="#33000000"/>
-    <SolidColorBrush x:Key="AccentBrush" Color="#FF3B82F6"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#14000000"/>
-    <SolidColorBrush x:Key="SelectedBrush" Color="#283B82F6"/>
-    <SolidColorBrush x:Key="InputBackground" Color="#0A000000"/>
+    <SolidColorBrush x:Key="PanelBackground" Color="#F2F5F7FA"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ForegroundBrush" Color="#FF1A1D21"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="#FF6B7280"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#3318202A"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF4F6EF7"/>
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#FFEAF0FE"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#0D000000"/>
+    <SolidColorBrush x:Key="SelectedBrush" Color="#FFE8EDFF"/>
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFEF4444"/>
+    <SolidColorBrush x:Key="BadgeTextBrush" Color="#FFFFFFFF"/>
 </ResourceDictionary>

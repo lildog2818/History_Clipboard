@@ -18,7 +18,6 @@ public sealed class ClipEntry
     public bool Pinned { get; set; }
     public string[] Tags { get; set; } = Array.Empty<string>();
     public string Note { get; set; } = "";
-    public string OcrText { get; set; } = "";
     public string Hash { get; set; } = "";
 
     public bool IsImage => !string.IsNullOrEmpty(ImageFile);
@@ -37,7 +36,7 @@ public sealed class ClipEntry
             if (IsFileList)
                 return $"{Files.Length} 个文件 · {Files[0]}";
             if (IsImage)
-                return string.IsNullOrEmpty(OcrText) ? "(图片)" : $"(图片) {OcrText}";
+                return "(图片)";
             var t = PlainText ?? "";
             t = t.Replace('\r', ' ').Replace('\n', ' ');
             return t.Length > 200 ? t[..200] + "…" : t;
@@ -60,7 +59,10 @@ public sealed class Settings
     public bool RestoreClipboardAfterPaste { get; set; } = true;
     public bool QuickPasteNumberKeys { get; set; } = true;
     public bool AutoStart { get; set; }
-    public string[] OcrLanguages { get; set; } = { "zh-Hans", "zh-Hant", "en-US" };
+    public bool FirstRun { get; set; } = true;
+    public int MaxEntries { get; set; }
+    public bool PlainTextOnly { get; set; }
+    public string[] ExcludedApps { get; set; } = Array.Empty<string>();
 }
 
 public static class Hash

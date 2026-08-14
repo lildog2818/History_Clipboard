@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
@@ -66,35 +65,24 @@ public sealed class ClipboardMonitor : IDisposable
                         if (entry.Hash == _store.LatestHash) return; // consecutive duplicate
                         _store.Add(entry);
                         EntryAdded?.Invoke(entry);
-                        if (entry.IsImage) TriggerOcr(entry);
                     }
                 }
                 return;
             }
             catch (ExternalException) { Thread.Sleep(15); }
-            catch { return; }
-        }
-    }
-
-    private void TriggerOcr(ClipEntry entry)
-    {
-        var path = _store.ResolveImage(entry.ImageFile!);
-        _ = Task.Run(async () =>
-        {
-            try
+            catch (Exception ex)
             {
-                var bytes = System.IO.File.ReadAllBytes(path);
-                var text = await OcrService.RecognizeAsync(bytes);
-                if (!string.IsNullOrEmpty(text))
-                    _store.SetOcrText(entry.Id, text);
+                Logger.Error("读取剪贴板失败", ex);
+                return;
             }
-            catch { }
-        });
+        }
     }
 
     private ClipEntry? BuildEntry(IDataObject data)
     {
         var entry = new ClipEntry();
+        FillSource(entry);
+        if (IsExcluded(entry.SourceApp)) return null;
 
         if (data.GetDataPresent(DataFormats.FileDrop))
         {
@@ -104,7 +92,6 @@ public sealed class ClipboardMonitor : IDisposable
                 entry.Files = files;
                 entry.PlainText = string.Join("\r\n", files);
                 entry.Hash = Hash.OfText(string.Join("|", files));
-                FillSource(entry);
                 return entry;
             }
         }
@@ -124,7 +111,6 @@ public sealed class ClipboardMonitor : IDisposable
                     {
                         entry.ImageFile = rel;
                         entry.Hash = hash;
-                        FillSource(entry);
                         return entry;
                     }
                 }
@@ -136,12 +122,22 @@ public sealed class ClipboardMonitor : IDisposable
 
         entry.PlainText = text;
         entry.Hash = Hash.OfText(text);
-        if (data.GetDataPresent(DataFormats.Html))
-            entry.Html = Limit(data.GetData(DataFormats.Html) as string, 2_000_000);
-        if (data.GetDataPresent(DataFormats.Rtf))
-            entry.Rtf = Limit(data.GetData(DataFormats.Rtf) as string, 2_000_000);
-        FillSource(entry);
+        if (!Services.Settings.Current.PlainTextOnly)
+        {
+            if (data.GetDataPresent(DataFormats.Html))
+                entry.Html = Limit(data.GetData(DataFormats.Html) as string, 2_000_000);
+            if (data.GetDataPresent(DataFormats.Rtf))
+                entry.Rtf = Limit(data.GetData(DataFormats.Rtf) as string, 2_000_000);
+        }
         return entry;
+    }
+
+    private static bool IsExcluded(string app)
+    {
+        if (string.IsNullOrEmpty(app)) return false;
+        var list = Services.Settings?.Current?.ExcludedApps;
+        if (list == null || list.Length == 0) return false;
+        return list.Any(x => string.Equals(x, app, StringComparison.OrdinalIgnoreCase));
     }
 
     private static BitmapSource? GetBitmap(IDataObject data)
@@ -162,7 +158,11 @@ public sealed class ClipboardMonitor : IDisposable
             encoder.Save(ms);
             return ms.ToArray();
         }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            Logger.Error("图片编码失败", ex);
+            return null;
+        }
     }
 
     private static string GetText(IDataObject data)

@@ -15,11 +15,11 @@
         <Rectangle x:Name="DimRight" Fill="#66000000"/>
         <Rectangle x:Name="SelBorder" Stroke="#FF3B82F6" StrokeThickness="1.5" Visibility="Collapsed"/>
         <TextBlock x:Name="SizeLabel" Foreground="White" FontSize="12" Background="#99000000" Padding="6,2" Visibility="Collapsed"/>
-        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Visibility="Collapsed" Background="#EE1E1E1E">
-            <Button Content="复制" Click="Copy_Click" Margin="4" Padding="12,4"/>
-            <Button Content="OCR" Click="Ocr_Click" Margin="4" Padding="12,4"/>
-            <Button Content="贴图" Click="Pin_Click" Margin="4" Padding="12,4"/>
-            <Button Content="取消" Click="Cancel_Click" Margin="4" Padding="12,4"/>
+        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Visibility="Collapsed"
+                    Background="#F21E1E1E">
+            <Button Content="复制" Click="Copy_Click" Margin="4" Padding="16,6" FontSize="14"/>
+            <Button Content="贴图" Click="Pin_Click" Margin="4" Padding="16,6" FontSize="14"/>
+            <Button Content="取消" Click="Cancel_Click" Margin="4" Padding="16,6" FontSize="14"/>
         </StackPanel>
     </Canvas>
 </Window>

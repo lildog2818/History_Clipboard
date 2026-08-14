@@ -2,7 +2,6 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using ClipboardHistory.Core;
 
 namespace ClipboardHistory;
@@ -41,8 +40,9 @@ public partial class ScreenshotOverlay : Window
             Activate();
             Focus();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Error("截图失败", ex);
             _full?.Dispose();
             _full = null;
         }
@@ -179,68 +179,10 @@ public partial class ScreenshotOverlay : Window
         catch { }
     }
 
-    private async void Ocr_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var png = CropPng();
-            var entry = Services.Store.AddImageEntry(png);
-            SetClipboardImage(entry);
-            Close();
-
-            var text = await OcrService.RecognizeAsync(png);
-            if (!string.IsNullOrEmpty(text)) Services.Store.SetOcrText(entry.Id, text);
-            ShowOcrResult(text);
-        }
-        catch { }
-    }
-
     private static void SetClipboardImage(ClipEntry entry)
     {
         var bmp = Paster.LoadBitmap(entry);
         if (bmp != null) Services.Writer.SetImage(bmp);
-    }
-
-    private static void ShowOcrResult(string text)
-    {
-        var win = new Window
-        {
-            Title = "OCR 结果",
-            Width = 520,
-            Height = 320,
-            WindowStartupLocation = WindowStartupLocation.CenterScreen,
-            Topmost = true
-        };
-        var grid = new Grid { Margin = new Thickness(12) };
-        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        var box = new TextBox
-        {
-            Text = text,
-            TextWrapping = TextWrapping.Wrap,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            IsReadOnly = true
-        };
-        Grid.SetRow(box, 0);
-        var btn = new Button
-        {
-            Content = "复制文字",
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 8, 0, 0),
-            Padding = new Thickness(14, 5, 14, 5)
-        };
-        btn.Click += (_, _) =>
-        {
-            Services.Writer.SetText(text);
-            win.Close();
-        };
-        Grid.SetRow(btn, 1);
-        grid.Children.Add(box);
-        grid.Children.Add(btn);
-        win.Content = grid;
-        win.Show();
-        box.Focus();
-        box.SelectAll();
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Close();

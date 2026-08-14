@@ -48,6 +48,14 @@ public partial class PinnedImageWindow : Window
         OpenWindows.Add(this);
     }
 
+    private void Window_MouseEnter(object sender, MouseEventArgs e)
+        => CloseBtn.Visibility = Visibility.Visible;
+
+    private void Window_MouseLeave(object sender, MouseEventArgs e)
+        => CloseBtn.Visibility = Visibility.Collapsed;
+
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
         _dragStart = e.GetPosition(this);

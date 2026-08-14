@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Interop;
 
 namespace ClipboardHistory.Core;
@@ -47,6 +48,14 @@ public sealed class HotkeyManager : IDisposable
             }
         }
         return IntPtr.Zero;
+    }
+
+    public void Clear()
+    {
+        if (_source == null) return;
+        foreach (var id in _handlers.Keys.ToList())
+            NativeMethods.UnregisterHotKey(_source.Handle, id);
+        _handlers.Clear();
     }
 
     public void Dispose()

@@ -44,9 +44,19 @@ public partial class App : System.Windows.Application
             RegisterHotkeys();
             InitTray();
             StartSecondInstanceListener();
+
+            if (Services.Settings.Current.FirstRun)
+            {
+                Services.Settings.Current.FirstRun = false;
+                Services.Settings.Save();
+                Dispatcher.BeginInvoke(new Action(ShowSearchBar));
+                _tray?.ShowBalloonTip(3000, "剪贴板历史",
+                    "已启动。Ctrl+` 唤起搜索条，Ctrl+Alt+A 截图。", ToolTipIcon.Info);
+            }
         }
         catch (Exception ex)
         {
+            Logger.Error("启动失败", ex);
             System.Windows.Forms.MessageBox.Show(
                 "启动失败: " + ex.Message, "剪贴板历史",
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -56,9 +66,17 @@ public partial class App : System.Windows.Application
 
     private void RegisterHotkeys()
     {
+        Services.Hotkeys.Clear();
         var s = Services.Settings.Current;
         Services.Hotkeys.Register(s.SearchHotkey.Modifiers, s.SearchHotkey.Key, ShowSearchBar);
         Services.Hotkeys.Register(s.ScreenshotHotkey.Modifiers, s.ScreenshotHotkey.Key, ShowScreenshot);
+    }
+
+    public void ApplySettings()
+    {
+        RegisterHotkeys();
+        ThemeManager.Apply(Services.Settings.Current.Theme);
+        Autostart.Set(Services.Settings.Current.AutoStart);
     }
 
     public void ShowSearchBar()
@@ -81,6 +99,13 @@ public partial class App : System.Windows.Application
         _overlay?.CaptureAndShow();
     }
 
+    private void ShowSettings()
+    {
+        _mainWindow?.HideBar();
+        var win = new SettingsWindow();
+        win.ShowDialog();
+    }
+
     private void InitTray()
     {
         _tray = new NotifyIcon
@@ -99,6 +124,10 @@ public partial class App : System.Windows.Application
         var shot = new ToolStripMenuItem("截图");
         shot.Click += (_, _) => ShowScreenshot();
         menu.Items.Add(shot);
+
+        var settings = new ToolStripMenuItem("设置...");
+        settings.Click += (_, _) => ShowSettings();
+        menu.Items.Add(settings);
 
         menu.Items.Add(new ToolStripSeparator());
 
@@ -211,7 +240,7 @@ public partial class App : System.Windows.Application
             path.AddArc(rect.Right - r, rect.Bottom - r, r, r, 0, 90);
             path.AddArc(rect.X, rect.Bottom - r, r, r, 90, 90);
             path.CloseFigure();
-            using var body = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(unchecked((int)0xFF3B82F6)));
+            using var body = new System.Drawing.SolidBrush(System.Drawing.Color.FromArgb(unchecked((int)0xFF4F6EF7)));
             g.FillPath(body, path);
 
             using var white = new System.Drawing.SolidBrush(System.Drawing.Color.White);
