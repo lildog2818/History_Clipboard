@@ -1,0 +1,94 @@
+<Window x:Class="ClipboardHistory.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ClipboardHistory"
+        Title="剪贴板历史" Width="640" Height="460"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        ShowActivated="True" Loaded="Window_Loaded" Deactivated="Window_Deactivated">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <local:ImagePathConverter x:Key="ImgConv"/>
+    </Window.Resources>
+    <Border x:Name="RootBorder" Background="{DynamicResource PanelBackground}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12">
+        <Grid Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBox x:Name="SearchBox" Grid.Row="0" Padding="8,6"
+                     Background="{DynamicResource InputBackground}"
+                     Foreground="{DynamicResource ForegroundBrush}"
+                     BorderThickness="0" FontSize="16"
+                     TextChanged="SearchBox_TextChanged"
+                     PreviewKeyDown="SearchBox_PreviewKeyDown"/>
+            <TextBlock x:Name="Hint" Grid.Row="0" Text="搜索剪贴板历史…" Margin="10,8,0,0"
+                       Foreground="{DynamicResource SecondaryBrush}" IsHitTestVisible="False" FontSize="16"/>
+
+            <TextBlock x:Name="StatusText" Grid.Row="1" Margin="2,6,2,2" FontSize="11"
+                       Foreground="{DynamicResource SecondaryBrush}"
+                       Text="↑↓ 选择 · Enter 粘贴 · Ctrl+Enter 纯文本 · 1-9 快速粘贴 · Del 删除 · Ctrl+P 置顶 · F2 备注 · 右键更多"/>
+
+            <ListBox x:Name="List" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="List_MouseDoubleClick"
+                     PreviewMouseRightButtonUp="List_PreviewMouseRightButtonUp"
+                     PreviewKeyDown="List_PreviewKeyDown">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="6,4"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Bd" Background="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Width="44" Height="44" Margin="0,0,8,0" Stretch="UniformToFill"
+                                   Source="{Binding ImageFile, Converter={StaticResource ImgConv}}"
+                                   Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}"/>
+                            <Border Grid.Column="1" Background="{DynamicResource AccentBrush}" CornerRadius="4" Padding="6,1" VerticalAlignment="Top">
+                                <TextBlock Text="{Binding TypeBadge}" Foreground="White" FontSize="10"/>
+                            </Border>
+                            <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding PinText}" FontSize="12" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding DisplayText}" Foreground="{DynamicResource ForegroundBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding SourceApp}" Foreground="{DynamicResource SecondaryBrush}" FontSize="10"/>
+                                    <TextBlock Text="{Binding CreatedAt, StringFormat=' · {0:MM-dd HH:mm}'}" Foreground="{DynamicResource SecondaryBrush}" FontSize="10"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Border>
+</Window>

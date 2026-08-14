@@ -1,0 +1,33 @@
+# ---- 构建产物（含编译后的 exe/dll/pdb）----
+bin/
+obj/
+publish/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+*.user
+*.suo
+*.userosscache
+
+# ---- IDE / 编辑器 ----
+.vs/
+.vscode/
+.idea/
+
+# ---- 隐私：剪贴板历史数据（切勿提交真实剪贴板内容/截图）----
+history.json
+settings.json
+images/
+*.clipboard
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- 调试符号与缓存 ----
+*.pdb
+*.cache
+
+# ---- 操作系统杂项 ----
+Thumbs.db
+Desktop.ini
+.DS_Store

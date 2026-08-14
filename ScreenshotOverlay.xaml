@@ -1,0 +1,25 @@
+<Window x:Class="ClipboardHistory.ScreenshotOverlay"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        Cursor="Cross" ShowActivated="True" KeyDown="Window_KeyDown">
+    <Canvas x:Name="Root" Background="Transparent"
+            MouseLeftButtonDown="Root_MouseLeftButtonDown"
+            MouseMove="Root_MouseMove"
+            MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <Image x:Name="ScreenImage" Stretch="Fill"/>
+        <Rectangle x:Name="DimTop" Fill="#66000000"/>
+        <Rectangle x:Name="DimBottom" Fill="#66000000"/>
+        <Rectangle x:Name="DimLeft" Fill="#66000000"/>
+        <Rectangle x:Name="DimRight" Fill="#66000000"/>
+        <Rectangle x:Name="SelBorder" Stroke="#FF3B82F6" StrokeThickness="1.5" Visibility="Collapsed"/>
+        <TextBlock x:Name="SizeLabel" Foreground="White" FontSize="12" Background="#99000000" Padding="6,2" Visibility="Collapsed"/>
+        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Visibility="Collapsed" Background="#EE1E1E1E">
+            <Button Content="复制" Click="Copy_Click" Margin="4" Padding="12,4"/>
+            <Button Content="OCR" Click="Ocr_Click" Margin="4" Padding="12,4"/>
+            <Button Content="贴图" Click="Pin_Click" Margin="4" Padding="12,4"/>
+            <Button Content="取消" Click="Cancel_Click" Margin="4" Padding="12,4"/>
+        </StackPanel>
+    </Canvas>
+</Window>
