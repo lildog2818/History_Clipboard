@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using ClipboardHistory.Core;
 
 namespace ClipboardHistory;
@@ -14,6 +15,9 @@ public partial class MainWindow : Window
 
     private TabKind _activeTab = TabKind.Text;
     private bool _suppressAutoHide;
+    private DispatcherTimer? _toastTimer;
+    private DispatcherTimer? _clickTimer;
+    private ClipEntry? _pendingPinEntry;
 
     public MainWindow()
     {
@@ -61,6 +65,25 @@ public partial class MainWindow : Window
         if (hwnd == IntPtr.Zero) return false;
         NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
         return pid == Environment.ProcessId;
+    }
+
+    // ---------- 提示 ----------
+
+    private void ShowToast(string message)
+    {
+        ToastText.Text = message;
+        Toast.Visibility = Visibility.Visible;
+        _toastTimer ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.4) };
+        _toastTimer.Stop();
+        _toastTimer.Tick -= OnToastTick;
+        _toastTimer.Tick += OnToastTick;
+        _toastTimer.Start();
+    }
+
+    private void OnToastTick(object? sender, EventArgs e)
+    {
+        _toastTimer?.Stop();
+        Toast.Visibility = Visibility.Collapsed;
     }
 
     // ---------- 窗口位置/大小记忆 ----------
@@ -255,13 +278,11 @@ public partial class MainWindow : Window
 
     private void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        bool plain = Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-                     || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         switch (e.Key)
         {
             case Key.Enter:
                 e.Handled = true;
-                PasteSelected(plain);
+                CopySelected();
                 break;
             case Key.Down:
                 e.Handled = true;
@@ -286,13 +307,11 @@ public partial class MainWindow : Window
 
     private void List_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        bool plain = Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-                     || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
         switch (e.Key)
         {
             case Key.Enter:
                 e.Handled = true;
-                PasteSelected(plain);
+                CopySelected();
                 break;
             case Key.Escape:
                 e.Handled = true;
@@ -329,7 +348,7 @@ public partial class MainWindow : Window
                     if (n > 0)
                     {
                         e.Handled = true;
-                        PasteIndex(n - 1, plain);
+                        CopyIndex(n - 1);
                     }
                 }
                 break;
@@ -349,9 +368,39 @@ public partial class MainWindow : Window
 
     // ---------- 鼠标 ----------
 
-    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
-    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
-    private void ImageGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
+    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => CopySelected();
+    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => CopySelected();
+
+    // 图片卡片：单击=贴图（大图），双击=复制
+    private void ImageGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            _clickTimer?.Stop();
+            CopySelected();
+            return;
+        }
+
+        var item = ItemsControl.ContainerFromElement(ImageGrid, e.OriginalSource as DependencyObject) as ListBoxItem;
+        if (item == null) return;
+        var entry = item.DataContext as ClipEntry;
+        if (entry == null) return;
+        item.IsSelected = true;
+
+        _pendingPinEntry = entry;
+        _clickTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(260) };
+        _clickTimer.Stop();
+        _clickTimer.Tick -= OnPinTick;
+        _clickTimer.Tick += OnPinTick;
+        _clickTimer.Start();
+    }
+
+    private void OnPinTick(object? sender, EventArgs e)
+    {
+        _clickTimer?.Stop();
+        if (_pendingPinEntry != null) OpenPinnedImage(_pendingPinEntry);
+        _pendingPinEntry = null;
+    }
 
     private void TextList_RightClick(object sender, MouseButtonEventArgs e) => OnListRightClick(TextList, e);
     private void ImageGrid_RightClick(object sender, MouseButtonEventArgs e) => OnListRightClick(ImageGrid, e);
@@ -401,21 +450,15 @@ public partial class MainWindow : Window
 
     private void UpdatePreview(ClipEntry? entry)
     {
-        if (entry == null)
+        // 图片页不显示下方预览框（图片预览通过单击贴图实现）
+        if (_activeTab == TabKind.Image || entry == null)
         {
             PreviewPanel.Visibility = Visibility.Collapsed;
             return;
         }
 
         PreviewPanel.Visibility = Visibility.Visible;
-        if (entry.IsImage)
-        {
-            PreviewText.Visibility = Visibility.Collapsed;
-            PreviewFiles.Visibility = Visibility.Collapsed;
-            PreviewImage.Visibility = Visibility.Visible;
-            PreviewImage.Source = Paster.LoadBitmap(entry);
-        }
-        else if (entry.IsFileList)
+        if (entry.IsFileList)
         {
             PreviewText.Visibility = Visibility.Collapsed;
             PreviewImage.Visibility = Visibility.Collapsed;
@@ -436,42 +479,26 @@ public partial class MainWindow : Window
 
     // ---------- 操作 ----------
 
-    private void PasteSelected(bool plain)
-    {
-        var entry = Selected;
-        if (entry == null) return;
-        HideBar();
-        Services.Paster.Paste(entry, plain);
-    }
-
-    private void PasteIndex(int index, bool plain)
-    {
-        var list = ActiveList;
-        if (list.Items.Count == 0) return;
-        if (index < 0 || index >= list.Items.Count) return;
-        var entry = list.Items[index] as ClipEntry;
-        if (entry == null) return;
-        HideBar();
-        Services.Paster.Paste(entry, plain);
-    }
-
     private void CopySelected()
     {
         var entry = Selected;
         if (entry != null) CopyEntry(entry);
     }
 
+    private void CopyIndex(int index)
+    {
+        var list = ActiveList;
+        if (list.Items.Count == 0) return;
+        if (index < 0 || index >= list.Items.Count) return;
+        var entry = list.Items[index] as ClipEntry;
+        if (entry != null) CopyEntry(entry);
+    }
+
+    // 复制到剪贴板（经自写守卫，不会再次入库），提示但不关闭窗口
     private void CopyEntry(ClipEntry entry)
     {
-        if (entry.IsImage)
-        {
-            var bmp = Paster.LoadBitmap(entry);
-            if (bmp != null) Services.Writer.SetImage(bmp);
-        }
-        else
-        {
-            Services.Writer.SetText(entry.PlainText);
-        }
+        Services.Writer.SetData(Paster.BuildDataObject(entry, false));
+        ShowToast("已复制");
     }
 
     private void TogglePinSelected()

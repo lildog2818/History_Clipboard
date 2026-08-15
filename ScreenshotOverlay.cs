@@ -173,10 +173,10 @@ public partial class ScreenshotOverlay : Window
 
     private void Pin_Click(object sender, RoutedEventArgs e)
     {
-        if (_capturedEntry == null) { Close(); return; }
+        if (_capturedEntry == null) { HideOverlay(); return; }
         var win = new PinnedImageWindow(Services.Store.ResolveImage(_capturedEntry.ImageFile!));
         win.Show();
-        Close();
+        HideOverlay();
     }
 
     private static void SetClipboardImage(ClipEntry entry)
@@ -185,15 +185,23 @@ public partial class ScreenshotOverlay : Window
         if (bmp != null) Services.Writer.SetImage(bmp);
     }
 
-    private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
+    private void Cancel_Click(object sender, RoutedEventArgs e) => HideOverlay();
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape || e.Key == Key.Enter)
         {
-            Close();
+            HideOverlay();
             e.Handled = true;
         }
+    }
+
+    // 用 Hide 而非 Close，保证窗口可被反复唤起（Close 后无法再次 Show）
+    private void HideOverlay()
+    {
+        _full?.Dispose();
+        _full = null;
+        Hide();
     }
 
     protected override void OnClosed(EventArgs e)

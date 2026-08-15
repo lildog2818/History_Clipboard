@@ -171,7 +171,7 @@
             <!-- 图片页（卡片网格） -->
             <ListBox x:Name="ImageGrid" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
                      Visibility="Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     MouseDoubleClick="ImageGrid_MouseDoubleClick"
+                     MouseLeftButtonDown="ImageGrid_MouseLeftButtonDown"
                      PreviewMouseRightButtonUp="ImageGrid_RightClick"
                      PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="ImageGrid_SelectionChanged">
                 <ListBox.ItemsPanel>
@@ -264,7 +264,14 @@
             <!-- 底部提示 -->
             <TextBlock Grid.Row="5" x:Name="StatusText" Margin="14,2,14,10" FontSize="12"
                        Foreground="{DynamicResource SecondaryBrush}"
-                       Text="单击查看 · 双击粘贴（图片双击贴图）· Enter 粘贴 · Ctrl+Enter 纯文本 · 右键更多"/>
+                       Text="单击预览（图片单击贴图）· 双击复制 · Enter 复制 · 1-9 快速复制 · 右键更多"/>
+
+            <!-- 复制成功提示 -->
+            <Border x:Name="Toast" Grid.RowSpan="6" Background="#CC1A1D22" CornerRadius="10" Padding="18,10"
+                    HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,46"
+                    Visibility="Collapsed" IsHitTestVisible="False">
+                <TextBlock x:Name="ToastText" Text="已复制" Foreground="White" FontSize="14"/>
+            </Border>
         </Grid>
     </Border>
 </Window>
