@@ -143,7 +143,9 @@ public partial class SettingsWindow : Window
         s.AutoStart = AutoStartBox.IsChecked == true;
 
         Services.Settings.Save();
-        ((App)Application.Current).ApplySettings();
+        bool ok = ((App)Application.Current).ApplySettings();
+        if (!ok)
+            MessageBox.Show("快捷键注册失败，可能被其他程序占用，请更换快捷键。", "设置", MessageBoxButton.OK, MessageBoxImage.Warning);
         Close();
     }
 

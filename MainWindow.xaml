@@ -184,7 +184,7 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="104" Height="104">
+                        <Grid Width="128" Height="128">
                             <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
                             <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"

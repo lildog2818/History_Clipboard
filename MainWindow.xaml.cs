@@ -51,7 +51,16 @@ public partial class MainWindow : Window
 
     private void Window_Deactivated(object sender, EventArgs e)
     {
-        if (!_suppressAutoHide) HideBar();
+        if (_suppressAutoHide || IsFocusInOurProcess()) return;
+        HideBar();
+    }
+
+    private static bool IsFocusInOurProcess()
+    {
+        var hwnd = NativeMethods.GetForegroundWindow();
+        if (hwnd == IntPtr.Zero) return false;
+        NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+        return pid == Environment.ProcessId;
     }
 
     // ---------- 窗口位置/大小记忆 ----------
@@ -162,7 +171,15 @@ public partial class MainWindow : Window
         TextList.Visibility = kind == TabKind.Text ? Visibility.Visible : Visibility.Collapsed;
         ImageGrid.Visibility = kind == TabKind.Image ? Visibility.Visible : Visibility.Collapsed;
         FileList.Visibility = kind == TabKind.File ? Visibility.Visible : Visibility.Collapsed;
-        SelectFirstInActiveTab();
+        if (kind == TabKind.Image)
+        {
+            PreviewPanel.Visibility = Visibility.Collapsed;
+            if (ImageGrid.Items.Count > 0) ImageGrid.SelectedIndex = 0;
+        }
+        else
+        {
+            SelectFirstInActiveTab();
+        }
         UpdateStatus();
     }
 
@@ -396,7 +413,7 @@ public partial class MainWindow : Window
 
     private void UpdatePreview(ClipEntry? entry)
     {
-        if (entry == null)
+        if (_activeTab == TabKind.Image || entry == null)
         {
             PreviewPanel.Visibility = Visibility.Collapsed;
             return;

@@ -64,19 +64,22 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void RegisterHotkeys()
+    private bool RegisterHotkeys()
     {
         Services.Hotkeys.Clear();
         var s = Services.Settings.Current;
-        Services.Hotkeys.Register(s.SearchHotkey.Modifiers, s.SearchHotkey.Key, ShowSearchBar);
-        Services.Hotkeys.Register(s.ScreenshotHotkey.Modifiers, s.ScreenshotHotkey.Key, ShowScreenshot);
+        bool ok1 = Services.Hotkeys.Register(s.SearchHotkey.Modifiers, s.SearchHotkey.Key, ShowSearchBar);
+        bool ok2 = Services.Hotkeys.Register(s.ScreenshotHotkey.Modifiers, s.ScreenshotHotkey.Key, ShowScreenshot);
+        if (!ok1 || !ok2) Logger.Error("快捷键注册失败（可能被其他程序占用）");
+        return ok1 && ok2;
     }
 
-    public void ApplySettings()
+    public bool ApplySettings()
     {
-        RegisterHotkeys();
+        bool ok = RegisterHotkeys();
         ThemeManager.Apply(Services.Settings.Current.Theme);
         Autostart.Set(Services.Settings.Current.AutoStart);
+        return ok;
     }
 
     public void ShowSearchBar() => ShowSearchBarCore(false);
