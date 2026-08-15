@@ -171,7 +171,7 @@
             <!-- 图片页（卡片网格） -->
             <ListBox x:Name="ImageGrid" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
                      Visibility="Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     MouseLeftButtonDown="ImageGrid_MouseLeftButtonDown"
+                     PreviewMouseLeftButtonDown="ImageGrid_PreviewMouseLeftButtonDown"
                      PreviewMouseRightButtonUp="ImageGrid_RightClick"
                      PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="ImageGrid_SelectionChanged">
                 <ListBox.ItemsPanel>
@@ -184,7 +184,7 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="128" Height="128">
+                        <Grid Width="150" Height="150">
                             <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
                             <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"
@@ -264,7 +264,7 @@
             <!-- 底部提示 -->
             <TextBlock Grid.Row="5" x:Name="StatusText" Margin="14,2,14,10" FontSize="12"
                        Foreground="{DynamicResource SecondaryBrush}"
-                       Text="单击预览（图片单击贴图）· 双击复制 · Enter 复制 · 1-9 快速复制 · 右键更多"/>
+                       Text="快捷键唤起：双击粘贴 · 托盘打开：双击复制 · 单击预览（图片单击贴图）· 右键更多"/>
 
             <!-- 复制成功提示 -->
             <Border x:Name="Toast" Grid.RowSpan="6" Background="#CC1A1D22" CornerRadius="10" Padding="18,10"

@@ -86,11 +86,10 @@ public partial class App : System.Windows.Application
         return ok;
     }
 
-    public void ShowSearchBar() => ShowSearchBarCore(false);
+    public void ShowSearchBar() => ShowSearchBarCore(false, true);       // 快捷键：不抢焦点，双击粘贴
+    public void ShowSearchBarRestored() => ShowSearchBarCore(true, false); // 托盘：双击复制
 
-    public void ShowSearchBarRestored() => ShowSearchBarCore(true);
-
-    private void ShowSearchBarCore(bool restorePosition)
+    private void ShowSearchBarCore(bool restorePosition, bool pasteMode)
     {
         if (_mainWindow == null) return;
         if (_mainWindow.IsVisible)
@@ -98,10 +97,7 @@ public partial class App : System.Windows.Application
             _mainWindow.HideBar();
             return;
         }
-        Services.Paster.TargetWindow = NativeMethods.GetForegroundWindow();
-        var newest = Services.Store.Entries.FirstOrDefault();
-        Services.Paster.SetRestoreEntry(newest);
-        _mainWindow.ShowBar(restorePosition);
+        _mainWindow.ShowBar(restorePosition, pasteMode);
     }
 
     public void ShowScreenshot()

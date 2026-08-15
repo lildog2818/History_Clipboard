@@ -13,7 +13,7 @@ public sealed class ClipboardMonitor : IDisposable
 {
     private readonly ClipboardStore _store;
     private HwndSource? _source;
-    private int _selfWriteCount;
+    private long _selfWriteUntilTicks;
 
     public event Action<ClipEntry>? EntryAdded;
 
@@ -33,18 +33,16 @@ public sealed class ClipboardMonitor : IDisposable
         NativeMethods.AddClipboardFormatListener(_source.Handle);
     }
 
-    public void BeginSelfWrite() => _selfWriteCount++;
-    public void EndSelfWrite() { if (_selfWriteCount > 0) _selfWriteCount--; }
+    // 自写剪贴板：用时间窗口忽略后续所有通知（一次写入可能触发多次 WM_CLIPBOARDUPDATE）
+    public void BeginSelfWrite() => _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(800).Ticks;
+    public void EndSelfWrite() => _selfWriteUntilTicks = 0;
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == NativeMethods.WM_CLIPBOARDUPDATE)
         {
-            if (_selfWriteCount > 0)
-            {
-                _selfWriteCount--;
-                return IntPtr.Zero;
-            }
+            if (DateTime.UtcNow.Ticks < _selfWriteUntilTicks)
+                return IntPtr.Zero; // 忽略自写
             CaptureWithRetry();
         }
         return IntPtr.Zero;

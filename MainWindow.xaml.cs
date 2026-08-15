@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using ClipboardHistory.Core;
 
@@ -15,6 +16,7 @@ public partial class MainWindow : Window
 
     private TabKind _activeTab = TabKind.Text;
     private bool _suppressAutoHide;
+    private bool _pasteMode;
     private DispatcherTimer? _toastTimer;
     private DispatcherTimer? _clickTimer;
     private ClipEntry? _pendingPinEntry;
@@ -27,16 +29,34 @@ public partial class MainWindow : Window
         TextTab.IsChecked = true;
     }
 
-    public void ShowBar(bool restorePosition)
+    public void ShowBar(bool restorePosition, bool pasteMode)
     {
+        _pasteMode = pasteMode;
         Refresh();
         ApplySavedSize();
         if (restorePosition) RestorePosition(); else PositionNearCursor();
+
+        ShowActivated = !pasteMode;
+        SetNoActivate(pasteMode);
         Show();
-        Activate();
         WindowEffects.ApplyBackdrop(this, ThemeManager.IsDarkEffective(Services.Settings.Current.Theme));
-        SearchBox.Focus();
-        Keyboard.Focus(SearchBox);
+        if (!pasteMode)
+        {
+            Activate();
+            SearchBox.Focus();
+            Keyboard.Focus(SearchBox);
+        }
+    }
+
+    // 快捷键唤起时不抢焦点（点击也不激活窗口），双击直接粘贴回原应用
+    private void SetNoActivate(bool noActivate)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd == IntPtr.Zero) return;
+        int ex = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+        if (noActivate) ex |= NativeMethods.WS_EX_NOACTIVATE;
+        else ex &= ~NativeMethods.WS_EX_NOACTIVATE;
+        NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, ex);
     }
 
     public void HideBar()
@@ -168,7 +188,7 @@ public partial class MainWindow : Window
         {
             _suppressAutoHide = false;
         }
-        ShowBar(false);
+        ShowBar(false, false);
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => HideBar();
@@ -368,16 +388,23 @@ public partial class MainWindow : Window
 
     // ---------- 鼠标 ----------
 
-    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => CopySelected();
-    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => CopySelected();
+    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick();
+    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick();
 
-    // 图片卡片：单击=贴图（大图），双击=复制
-    private void ImageGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    // 双击：快捷键唤起=直接粘贴到焦点；托盘打开=复制
+    private void ItemDoubleClick()
+    {
+        if (_pasteMode) PasteToFocus();
+        else CopySelected();
+    }
+
+    // 图片卡片：单击=贴图（大图），双击=粘贴/复制
+    private void ImageGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2)
         {
             _clickTimer?.Stop();
-            CopySelected();
+            if (_pasteMode) PasteToFocus(); else CopySelected();
             return;
         }
 
@@ -483,6 +510,16 @@ public partial class MainWindow : Window
     {
         var entry = Selected;
         if (entry != null) CopyEntry(entry);
+    }
+
+    // 直接粘贴到当前焦点窗口（用于快捷键唤起的“不抢焦点”模式）
+    private void PasteToFocus()
+    {
+        var entry = Selected;
+        if (entry == null) return;
+        Services.Writer.SetData(Paster.BuildDataObject(entry, false));
+        NativeMethods.SendCtrlV();
+        HideBar();
     }
 
     private void CopyIndex(int index)
