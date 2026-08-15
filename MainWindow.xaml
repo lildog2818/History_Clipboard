@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:local="clr-namespace:ClipboardHistory"
-        Title="剪贴板历史" Width="760" Height="600" MinWidth="500" MinHeight="400"
+        Title="剪贴板历史" Width="460" Height="720" MinWidth="360" MinHeight="500"
         WindowStyle="None" AllowsTransparency="False" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="CanResize"
         ShowActivated="True" Loaded="Window_Loaded" Deactivated="Window_Deactivated">
@@ -16,27 +16,22 @@
         <local:ImagePathConverter x:Key="ImgConv"/>
         <local:HighlightConverter x:Key="HlConv"/>
 
-        <Style x:Key="WinBtn" TargetType="Button">
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+        <Style x:Key="TabStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}"
+                                BorderThickness="0,0,0,2" BorderBrush="Transparent">
+                            <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -44,29 +39,21 @@
             </Setter>
         </Style>
 
-        <Style x:Key="WinBtnClose" TargetType="Button">
-            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <Style x:Key="CardItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="{DynamicResource SurfaceBrush}" CornerRadius="8"
+                                BorderThickness="2" BorderBrush="Transparent">
+                            <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DangerBrush}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DangerBrush}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -81,23 +68,24 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- 标题栏（可拖动） -->
-            <Grid Grid.Row="0" Height="42">
+            <Grid Grid.Row="0" Height="40">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Border Grid.Column="0" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
-                        <TextBlock Text="&#xE77F;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                        <TextBlock Text="&#xE77F;" FontFamily="Segoe MDL2 Assets" FontSize="13"
                                    Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center"/>
-                        <TextBlock Text="剪贴板历史" FontSize="14" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource ForegroundBrush}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="剪贴板历史" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ForegroundBrush}" Margin="7,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Border>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -106,12 +94,22 @@
                     <Button x:Name="SettingsBtn" Style="{StaticResource WinBtn}" Click="Settings_Click"
                             Content="&#xE713;" ToolTip="设置"/>
                     <Button x:Name="CloseBtn" Style="{StaticResource WinBtnClose}" Click="Close_Click"
-                            Content="&#xE8BB;" ToolTip="关闭" Margin="0,0,6,0"/>
+                            Content="&#xE8BB;" ToolTip="关闭" Margin="0,0,4,0"/>
                 </StackPanel>
             </Grid>
 
+            <!-- 页签 -->
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="10,0,0,0">
+                <RadioButton x:Name="TextTab" Content="文字" GroupName="Tabs" Style="{StaticResource TabStyle}"
+                             Checked="Tab_Checked"/>
+                <RadioButton x:Name="ImageTab" Content="图片" GroupName="Tabs" Style="{StaticResource TabStyle}"
+                             Checked="Tab_Checked"/>
+                <RadioButton x:Name="FileTab" Content="文件" GroupName="Tabs" Style="{StaticResource TabStyle}"
+                             Checked="Tab_Checked"/>
+            </StackPanel>
+
             <!-- 搜索框 -->
-            <Border Grid.Row="1" Margin="12,2,12,8" CornerRadius="8" Background="{DynamicResource SurfaceBrush}"
+            <Border Grid.Row="2" Margin="12,4,12,8" CornerRadius="8" Background="{DynamicResource SurfaceBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                 <Grid>
                     <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
@@ -129,17 +127,16 @@
                 </Grid>
             </Border>
 
-            <!-- 结果列表 -->
-            <ListBox x:Name="List" Grid.Row="2" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
+            <!-- 文字页 -->
+            <ListBox x:Name="TextList" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     MouseDoubleClick="List_MouseDoubleClick"
-                     PreviewMouseRightButtonUp="List_PreviewMouseRightButtonUp"
-                     PreviewKeyDown="List_PreviewKeyDown"
-                     SelectionChanged="List_SelectionChanged">
+                     MouseDoubleClick="TextList_MouseDoubleClick"
+                     PreviewMouseRightButtonUp="TextList_RightClick"
+                     PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="TextList_SelectionChanged">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                        <Setter Property="Padding" Value="10,8"/>
+                        <Setter Property="Padding" Value="10,9"/>
                         <Setter Property="Margin" Value="0,2"/>
                         <Setter Property="Template">
                             <Setter.Value>
@@ -162,53 +159,112 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Image Grid.Column="0" Width="40" Height="40" Margin="0,0,10,0" Stretch="UniformToFill"
-                                   Source="{Binding ImageFile, Converter={StaticResource ImgConv}}"
-                                   Visibility="{Binding IsImage, Converter={StaticResource BoolToVis}}"/>
-                            <Border Grid.Column="1" Background="{DynamicResource AccentBrush}" CornerRadius="5"
-                                    Padding="7,2" VerticalAlignment="Top">
-                                <TextBlock Text="{Binding TypeBadge}" Foreground="{DynamicResource BadgeTextBrush}" FontSize="11"/>
-                            </Border>
-                            <StackPanel Grid.Column="2" Margin="10,0,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding PinText}" FontSize="13" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                                    <ContentControl Content="{Binding DisplayText, Converter={StaticResource HlConv}}"
-                                                    HorizontalContentAlignment="Stretch" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                    <TextBlock Text="{Binding SourceApp}" Foreground="{DynamicResource SecondaryBrush}" FontSize="12"/>
-                                    <TextBlock Text="{Binding CreatedAt, StringFormat=' · {0:MM-dd HH:mm}'}" Foreground="{DynamicResource SecondaryBrush}" FontSize="12"/>
-                                </StackPanel>
-                            </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding PinText}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <ContentControl Content="{Binding DisplayText, Converter={StaticResource HlConv}}"
+                                            HorizontalContentAlignment="Stretch" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- 图片页（卡片网格） -->
+            <ListBox x:Name="ImageGrid" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
+                     Visibility="Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="ImageGrid_MouseDoubleClick"
+                     PreviewMouseRightButtonUp="ImageGrid_RightClick"
+                     PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="ImageGrid_SelectionChanged">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem" BasedOn="{StaticResource CardItem}"/>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="104" Height="104">
+                            <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
+                            <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
+                                       Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"
+                                       VerticalAlignment="Top" Margin="6" Visibility="{Binding Pinned, Converter={StaticResource BoolToVis}}"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
+            <!-- 文件页 -->
+            <ListBox x:Name="FileList" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
+                     Visibility="Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     MouseDoubleClick="FileList_MouseDoubleClick"
+                     PreviewMouseRightButtonUp="FileList_RightClick"
+                     PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="FileList_SelectionChanged">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="10,9"/>
+                        <Setter Property="Margin" Value="0,2"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SelectedBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding PinText}" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <ContentControl Content="{Binding DisplayText, Converter={StaticResource HlConv}}"
+                                            HorizontalContentAlignment="Stretch" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
             <!-- 预览面板 -->
-            <Border Grid.Row="3" x:Name="PreviewPanel" Margin="8,8,8,4" Padding="10" Height="150"
+            <Border Grid.Row="4" x:Name="PreviewPanel" Margin="8,8,8,4" Padding="10" Height="170"
                     Background="{DynamicResource SurfaceBrush}" CornerRadius="8"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Visibility="Collapsed">
                 <Grid>
-                    <TextBox x:Name="PreviewText" IsReadOnly="True" TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0"
-                             Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                    <Image x:Name="PreviewImage" Stretch="Uniform" Visibility="Collapsed"/>
-                    <ListBox x:Name="PreviewFiles" Background="Transparent" BorderThickness="0" FontSize="13"
-                             Foreground="{DynamicResource ForegroundBrush}" Visibility="Collapsed"/>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <TextBox x:Name="PreviewText" IsReadOnly="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" Background="Transparent" BorderThickness="0"
+                                 Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <Image x:Name="PreviewImage" Stretch="Uniform" Visibility="Collapsed"/>
+                        <ListBox x:Name="PreviewFiles" Background="Transparent" BorderThickness="0" FontSize="13"
+                                 Foreground="{DynamicResource ForegroundBrush}" Visibility="Collapsed"/>
+                    </Grid>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock x:Name="PreviewNote" FontSize="12" Foreground="{DynamicResource AccentBrush}"
+                                   TextWrapping="Wrap" MaxWidth="200"/>
+                        <TextBlock x:Name="PreviewMeta" FontSize="12" Foreground="{DynamicResource SecondaryBrush}"
+                                   VerticalAlignment="Bottom"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
             <!-- 底部提示 -->
-            <TextBlock Grid.Row="4" x:Name="StatusText" Margin="14,2,14,10" FontSize="12"
+            <TextBlock Grid.Row="5" x:Name="StatusText" Margin="14,2,14,10" FontSize="12"
                        Foreground="{DynamicResource SecondaryBrush}"
-                       Text="↑↓ 选择 · Enter 粘贴 · Ctrl+Enter 纯文本 · 1-9 快速粘贴 · Del 删除 · 右键更多"/>
+                       Text="单击查看 · 双击粘贴（图片双击贴图）· Enter 粘贴 · Ctrl+Enter 纯文本 · 右键更多"/>
         </Grid>
     </Border>
 </Window>

@@ -79,7 +79,11 @@ public partial class App : System.Windows.Application
         Autostart.Set(Services.Settings.Current.AutoStart);
     }
 
-    public void ShowSearchBar()
+    public void ShowSearchBar() => ShowSearchBarCore(false);
+
+    public void ShowSearchBarRestored() => ShowSearchBarCore(true);
+
+    private void ShowSearchBarCore(bool restorePosition)
     {
         if (_mainWindow == null) return;
         if (_mainWindow.IsVisible)
@@ -90,7 +94,7 @@ public partial class App : System.Windows.Application
         Services.Paster.TargetWindow = NativeMethods.GetForegroundWindow();
         var newest = Services.Store.Entries.FirstOrDefault();
         Services.Paster.SetRestoreEntry(newest);
-        _mainWindow.ShowBar();
+        _mainWindow.ShowBar(restorePosition);
     }
 
     public void ShowScreenshot()
@@ -178,7 +182,7 @@ public partial class App : System.Windows.Application
         menu.Items.Add(exit);
 
         _tray.ContextMenuStrip = menu;
-        _tray.DoubleClick += (_, _) => ShowSearchBar();
+        _tray.DoubleClick += (_, _) => ShowSearchBarRestored();
     }
 
     private void ChooseDataDirectory()

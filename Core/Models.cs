@@ -63,6 +63,10 @@ public sealed class Settings
     public int MaxEntries { get; set; }
     public bool PlainTextOnly { get; set; }
     public string[] ExcludedApps { get; set; } = Array.Empty<string>();
+    public double WindowX { get; set; }
+    public double WindowY { get; set; }
+    public double WindowW { get; set; }
+    public double WindowH { get; set; }
 }
 
 public static class Hash
