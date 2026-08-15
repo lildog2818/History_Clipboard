@@ -171,15 +171,7 @@ public partial class MainWindow : Window
         TextList.Visibility = kind == TabKind.Text ? Visibility.Visible : Visibility.Collapsed;
         ImageGrid.Visibility = kind == TabKind.Image ? Visibility.Visible : Visibility.Collapsed;
         FileList.Visibility = kind == TabKind.File ? Visibility.Visible : Visibility.Collapsed;
-        if (kind == TabKind.Image)
-        {
-            PreviewPanel.Visibility = Visibility.Collapsed;
-            if (ImageGrid.Items.Count > 0) ImageGrid.SelectedIndex = 0;
-        }
-        else
-        {
-            SelectFirstInActiveTab();
-        }
+        SelectFirstInActiveTab();
         UpdateStatus();
     }
 
@@ -359,11 +351,7 @@ public partial class MainWindow : Window
 
     private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
     private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
-    private void ImageGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        var entry = Selected;
-        if (entry != null) OpenPinnedImage(entry);
-    }
+    private void ImageGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) => PasteSelected(false);
 
     private void TextList_RightClick(object sender, MouseButtonEventArgs e) => OnListRightClick(TextList, e);
     private void ImageGrid_RightClick(object sender, MouseButtonEventArgs e) => OnListRightClick(ImageGrid, e);
@@ -413,7 +401,7 @@ public partial class MainWindow : Window
 
     private void UpdatePreview(ClipEntry? entry)
     {
-        if (_activeTab == TabKind.Image || entry == null)
+        if (entry == null)
         {
             PreviewPanel.Visibility = Visibility.Collapsed;
             return;

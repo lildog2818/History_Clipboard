@@ -69,6 +69,34 @@ public sealed class HotkeyBox : TextBox
         if (v >= 0x30 && v <= 0x39) return ((char)('0' + (v - 0x30))).ToString();
         if (v >= 0x41 && v <= 0x5A) return ((char)('A' + (v - 0x41))).ToString();
         if (v >= 0x70 && v <= 0x7B) return "F" + (v - 0x70 + 1);
+        switch (v)
+        {
+            case 0xC0: return "`";
+            case 0xBB: return "=";
+            case 0xBD: return "-";
+            case 0xBC: return ",";
+            case 0xBE: return ".";
+            case 0xBF: return "/";
+            case 0xDB: return "[";
+            case 0xDD: return "]";
+            case 0xDC: return "\\";
+            case 0xBA: return ";";
+            case 0xDE: return "'";
+            case 0x20: return "空格";
+            case 0x0D: return "回车";
+            case 0x09: return "Tab";
+            case 0x1B: return "Esc";
+            case 0x2E: return "Del";
+            case 0x08: return "退格";
+            case 0x21: return "PgUp";
+            case 0x22: return "PgDn";
+            case 0x23: return "End";
+            case 0x24: return "Home";
+            case 0x25: return "←";
+            case 0x26: return "↑";
+            case 0x27: return "→";
+            case 0x28: return "↓";
+        }
         var key = KeyInterop.KeyFromVirtualKey(v);
         return key == Key.None ? "VK" + v : key.ToString();
     }

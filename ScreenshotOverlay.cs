@@ -13,6 +13,7 @@ public partial class ScreenshotOverlay : Window
     private Point _start;
     private bool _dragging;
     private Rect _selection;
+    private ClipEntry? _capturedEntry;
 
     public ScreenshotOverlay()
     {
@@ -52,6 +53,7 @@ public partial class ScreenshotOverlay : Window
     {
         _selection = Rect.Empty;
         _dragging = false;
+        _capturedEntry = null;
         Toolbar.Visibility = Visibility.Collapsed;
         SizeLabel.Visibility = Visibility.Collapsed;
         SelBorder.Visibility = Visibility.Collapsed;
@@ -84,6 +86,7 @@ public partial class ScreenshotOverlay : Window
             ResetSelection();
             return;
         }
+        CaptureSelection();
         ShowToolbar();
     }
 
@@ -153,30 +156,27 @@ public partial class ScreenshotOverlay : Window
         return ScreenCapture.CropToPng(_full, rect);
     }
 
-    private void Copy_Click(object sender, RoutedEventArgs e)
+    // 松开鼠标即自动复制到剪贴板并入库，工具栏只保留「贴图 / 取消」
+    private void CaptureSelection()
     {
         try
         {
             var png = CropPng();
-            var entry = Services.Store.AddImageEntry(png);
-            SetClipboardImage(entry);
-            Close();
+            _capturedEntry = Services.Store.AddImageEntry(png);
+            SetClipboardImage(_capturedEntry);
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logger.Error("截图保存失败", ex);
+        }
     }
 
     private void Pin_Click(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var png = CropPng();
-            var entry = Services.Store.AddImageEntry(png);
-            SetClipboardImage(entry);
-            var win = new PinnedImageWindow(Services.Store.ResolveImage(entry.ImageFile!));
-            win.Show();
-            Close();
-        }
-        catch { }
+        if (_capturedEntry == null) { Close(); return; }
+        var win = new PinnedImageWindow(Services.Store.ResolveImage(_capturedEntry.ImageFile!));
+        win.Show();
+        Close();
     }
 
     private static void SetClipboardImage(ClipEntry entry)
@@ -189,14 +189,9 @@ public partial class ScreenshotOverlay : Window
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape)
+        if (e.Key == Key.Escape || e.Key == Key.Enter)
         {
             Close();
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Enter && !_selection.IsEmpty)
-        {
-            Copy_Click(this, new RoutedEventArgs());
             e.Handled = true;
         }
     }

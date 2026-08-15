@@ -35,7 +35,7 @@
                             <ColumnDefinition Width="120"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="唤起搜索" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
+                        <TextBlock Text="唤起面板" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
                         <local:HotkeyBox Grid.Column="1" x:Name="SearchHotkeyBox"/>
                     </Grid>
                     <Grid Margin="0,8,0,0">

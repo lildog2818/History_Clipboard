@@ -41,9 +41,13 @@ public partial class App : System.Windows.Application
             _mainWindow = new MainWindow();
             _overlay = new ScreenshotOverlay();
 
-            RegisterHotkeys();
+            bool hotkeysOk = RegisterHotkeys();
             InitTray();
             StartSecondInstanceListener();
+
+            if (!hotkeysOk)
+                _tray?.ShowBalloonTip(4000, "剪贴板历史",
+                    "快捷键注册失败，可能被其他程序占用。请在「设置 → 快捷键」中更换。", ToolTipIcon.Warning);
 
             if (Services.Settings.Current.FirstRun)
             {
