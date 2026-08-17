@@ -10,6 +10,7 @@
     <RootNamespace>ClipboardHistory</RootNamespace>
     <AssemblyName>ClipboardHistory</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\App.ico</ApplicationIcon>
     <AssemblyTitle>ClipboardHistory</AssemblyTitle>
     <Product>ClipboardHistory</Product>
     <Version>1.3.6</Version>
