@@ -163,6 +163,7 @@ public partial class ScreenshotOverlay : Window
         {
             var png = CropPng();
             _capturedEntry = Services.Store.AddImageEntry(png);
+            Services.Monitor.RememberSelfEntry(_capturedEntry);
             SetClipboardImage(_capturedEntry);
         }
         catch (Exception ex)

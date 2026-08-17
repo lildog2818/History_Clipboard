@@ -15,6 +15,7 @@ public sealed class ClipboardMonitor : IDisposable
     private HwndSource? _source;
     private long _selfWriteUntilTicks;
     private string _selfWriteHash = "";
+    private ClipEntry? _selfEntry;
 
     public event Action<ClipEntry>? EntryAdded;
 
@@ -34,14 +35,17 @@ public sealed class ClipboardMonitor : IDisposable
         NativeMethods.AddClipboardFormatListener(_source.Handle);
     }
 
-    // 自写剪贴板：时间窗（5s）+ 内容哈希双保险，避免自身写入被重复记录
+    // 自写剪贴板：时间窗（60s）+ 内容比对双保险，避免自身写入被重复记录
     public void BeginSelfWrite(string? contentHash = null)
     {
-        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(5000).Ticks;
+        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(60_000).Ticks;
         if (!string.IsNullOrEmpty(contentHash)) _selfWriteHash = contentHash;
     }
 
     public void EndSelfWrite() => _selfWriteUntilTicks = 0;
+
+    // 记录本次自写对应的原条目，用于捕获时按内容比对（文本/文件列表/图片像素）
+    public void RememberSelfEntry(ClipEntry entry) => _selfEntry = entry;
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
@@ -66,7 +70,8 @@ public sealed class ClipboardMonitor : IDisposable
                     var entry = BuildEntry(data);
                     if (entry != null)
                     {
-                        if (!string.IsNullOrEmpty(_selfWriteHash) && entry.Hash == _selfWriteHash) return; // 自写内容
+                        if (!string.IsNullOrEmpty(_selfWriteHash) && entry.Hash == _selfWriteHash) return; // 自写内容(文本)
+                        if (IsSelfWrittenDuplicate(entry)) return; // 自写内容(文件/图片按内容比对)
                         if (entry.Hash == _store.LatestHash) return; // consecutive duplicate
                         _store.Add(entry);
                         EntryAdded?.Invoke(entry);
@@ -81,6 +86,44 @@ public sealed class ClipboardMonitor : IDisposable
                 return;
             }
         }
+    }
+
+    // 捕获内容是否等于最近一次自写（复制/粘贴/截图）的条目内容
+    private bool IsSelfWrittenDuplicate(ClipEntry captured)
+    {
+        if (DateTime.UtcNow.Ticks >= _selfWriteUntilTicks) return false;
+        var self = _selfEntry;
+        if (self == null) return false;
+
+        if (captured.IsFileList && self.IsFileList)
+            return captured.Files.SequenceEqual(self.Files);
+        if (captured.IsImage && self.IsImage)
+            return ImagesEqual(self, captured);
+        return captured.PlainText == self.PlainText;
+    }
+
+    private static bool ImagesEqual(ClipEntry a, ClipEntry b)
+    {
+        try
+        {
+            var pa = DecodePixels(Services.Store.ResolveImage(a.ImageFile!));
+            var pb = DecodePixels(Services.Store.ResolveImage(b.ImageFile!));
+            return pa != null && pb != null && pa.SequenceEqual(pb);
+        }
+        catch { return false; }
+    }
+
+    private static byte[]? DecodePixels(string path)
+    {
+        var bmp = new BitmapImage();
+        bmp.BeginInit();
+        bmp.UriSource = new Uri(path, UriKind.Absolute);
+        bmp.CacheOption = BitmapCacheOption.OnLoad;
+        bmp.EndInit();
+        int stride = bmp.PixelWidth * 4;
+        var pixels = new byte[stride * bmp.PixelHeight];
+        bmp.CopyPixels(pixels, stride, 0);
+        return pixels;
     }
 
     private ClipEntry? BuildEntry(IDataObject data)

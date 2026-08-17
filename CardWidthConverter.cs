@@ -11,9 +11,8 @@ public sealed class CardWidthConverter : IValueConverter
     {
         double width = value is double d ? d : 0;
         double usable = width - 24;
-        if (usable < 160) usable = 160;
-        int columns = Math.Max(2, (int)(usable / 180));
-        return (usable - columns * 8) / columns;
+        if (usable < 120) usable = 120;
+        return (usable - 16) / 2; // 每行固定 2 张大图，铺满整行
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

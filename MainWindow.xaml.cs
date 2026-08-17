@@ -526,6 +526,7 @@ public partial class MainWindow : Window
         if (entry == null) return;
         try
         {
+            Services.Monitor.RememberSelfEntry(entry);
             Services.Writer.SetData(Paster.BuildDataObject(entry, false));
             NativeMethods.SendCtrlV();
             HideBar();
@@ -551,6 +552,7 @@ public partial class MainWindow : Window
     {
         try
         {
+            Services.Monitor.RememberSelfEntry(entry);
             Services.Writer.SetData(Paster.BuildDataObject(entry, false));
             ShowToast("已复制");
         }
