@@ -517,9 +517,24 @@ public partial class MainWindow : Window
     {
         var entry = Selected;
         if (entry == null) return;
-        Services.Writer.SetData(Paster.BuildDataObject(entry, false), copy: false);
-        NativeMethods.SendCtrlV();
-        HideBar();
+        try
+        {
+            if (entry.IsImage)
+            {
+                var bmp = Paster.LoadBitmap(entry);
+                if (bmp != null) Services.Writer.SetImage(bmp);
+            }
+            else
+            {
+                Services.Writer.SetText(entry.PlainText);
+            }
+            NativeMethods.SendCtrlV();
+            HideBar();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("粘贴失败", ex);
+        }
     }
 
     private void CopyIndex(int index)
@@ -534,8 +549,15 @@ public partial class MainWindow : Window
     // 复制到剪贴板（经自写守卫，不会再次入库），提示但不关闭窗口
     private void CopyEntry(ClipEntry entry)
     {
-        Services.Writer.SetData(Paster.BuildDataObject(entry, false));
-        ShowToast("已复制");
+        try
+        {
+            Services.Writer.SetData(Paster.BuildDataObject(entry, false));
+            ShowToast("已复制");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("复制失败", ex);
+        }
     }
 
     private void TogglePinSelected()

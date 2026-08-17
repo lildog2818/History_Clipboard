@@ -17,6 +17,13 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
 
+        // 全局异常兜底：记录日志，避免直接闪退
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Logger.Error("未处理异常", args.Exception);
+            args.Handled = true;
+        };
+
         if (!SingleInstance.TryAcquire())
         {
             SingleInstance.SignalExisting();
