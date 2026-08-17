@@ -1,4 +1,7 @@
+using System;
+using System.Threading;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace ClipboardHistory.Core;
 
@@ -8,25 +11,46 @@ public sealed class ClipboardWriter
 
     public ClipboardWriter(ClipboardMonitor monitor) => _monitor = monitor;
 
-    public void SetData(IDataObject data, bool copy = true)
+    // 一律使用 copy=false（延迟渲染）：copy=true 会调用 Flush→OpenClipboard，
+    // 在本机/某些环境下会间歇性失败(CLIPBRD_E_CANT_OPEN)。带重试兜底。
+    public void SetData(IDataObject data)
     {
         _monitor.BeginSelfWrite(TextHashOf(data));
-        try { Clipboard.SetDataObject(data, copy); }
+        try { SetWithRetry(() => Clipboard.SetDataObject(data, false)); }
         finally { _monitor.EndSelfWrite(); }
     }
 
     public void SetText(string text)
     {
+        var d = new DataObject();
+        d.SetData(DataFormats.UnicodeText, text);
         _monitor.BeginSelfWrite(Hash.OfText(text));
-        try { Clipboard.SetText(text); }
+        try { SetWithRetry(() => Clipboard.SetDataObject(d, false)); }
         finally { _monitor.EndSelfWrite(); }
     }
 
-    public void SetImage(System.Windows.Media.Imaging.BitmapSource image)
+    public void SetImage(BitmapSource image)
     {
+        var d = new DataObject();
+        d.SetData(DataFormats.Bitmap, image);
         _monitor.BeginSelfWrite();
-        try { Clipboard.SetImage(image); }
+        try { SetWithRetry(() => Clipboard.SetDataObject(d, false)); }
         finally { _monitor.EndSelfWrite(); }
+    }
+
+    private static void SetWithRetry(Action action)
+    {
+        Exception? last = null;
+        for (int i = 0; i < 4; i++)
+        {
+            try { action(); return; }
+            catch (Exception ex)
+            {
+                last = ex;
+                Thread.Sleep(120);
+            }
+        }
+        if (last != null) throw last;
     }
 
     private static string? TextHashOf(IDataObject data)
