@@ -14,6 +14,7 @@ public sealed class ClipboardMonitor : IDisposable
     private readonly ClipboardStore _store;
     private HwndSource? _source;
     private long _selfWriteUntilTicks;
+    private string _selfWriteHash = "";
 
     public event Action<ClipEntry>? EntryAdded;
 
@@ -33,18 +34,14 @@ public sealed class ClipboardMonitor : IDisposable
         NativeMethods.AddClipboardFormatListener(_source.Handle);
     }
 
-    // 自写剪贴板：临时注销监听（彻底收不到自身写入的通知）+ 时间窗兜底
-    public void BeginSelfWrite()
+    // 自写剪贴板：时间窗（5s）+ 内容哈希双保险，避免自身写入被重复记录
+    public void BeginSelfWrite(string? contentHash = null)
     {
-        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(3000).Ticks;
-        if (_source != null) NativeMethods.RemoveClipboardFormatListener(_source.Handle);
+        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(5000).Ticks;
+        if (!string.IsNullOrEmpty(contentHash)) _selfWriteHash = contentHash;
     }
 
-    public void EndSelfWrite()
-    {
-        _selfWriteUntilTicks = 0;
-        if (_source != null) NativeMethods.AddClipboardFormatListener(_source.Handle);
-    }
+    public void EndSelfWrite() => _selfWriteUntilTicks = 0;
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
@@ -69,6 +66,7 @@ public sealed class ClipboardMonitor : IDisposable
                     var entry = BuildEntry(data);
                     if (entry != null)
                     {
+                        if (!string.IsNullOrEmpty(_selfWriteHash) && entry.Hash == _selfWriteHash) return; // 自写内容
                         if (entry.Hash == _store.LatestHash) return; // consecutive duplicate
                         _store.Add(entry);
                         EntryAdded?.Invoke(entry);

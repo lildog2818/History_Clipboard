@@ -394,8 +394,15 @@ public partial class MainWindow : Window
     // 双击：快捷键唤起=直接粘贴到焦点；托盘打开=复制
     private void ItemDoubleClick()
     {
-        if (_pasteMode) PasteToFocus();
-        else CopySelected();
+        try
+        {
+            if (_pasteMode) PasteToFocus();
+            else CopySelected();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("双击操作异常", ex);
+        }
     }
 
     // 图片卡片：单击=贴图（大图），双击=粘贴/复制
@@ -519,21 +526,14 @@ public partial class MainWindow : Window
         if (entry == null) return;
         try
         {
-            if (entry.IsImage)
-            {
-                var bmp = Paster.LoadBitmap(entry);
-                if (bmp != null) Services.Writer.SetImage(bmp);
-            }
-            else
-            {
-                Services.Writer.SetText(entry.PlainText);
-            }
+            Services.Writer.SetData(Paster.BuildDataObject(entry, false));
             NativeMethods.SendCtrlV();
             HideBar();
         }
         catch (Exception ex)
         {
             Logger.Error("粘贴失败", ex);
+            ShowToast("粘贴失败");
         }
     }
 
@@ -557,6 +557,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             Logger.Error("复制失败", ex);
+            ShowToast("复制失败");
         }
     }
 
