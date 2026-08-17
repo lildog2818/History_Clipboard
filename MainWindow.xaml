@@ -15,6 +15,7 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local:ImagePathConverter x:Key="ImgConv"/>
         <local:HighlightConverter x:Key="HlConv"/>
+        <local:CardWidthConverter x:Key="CardConv"/>
 
         <Style x:Key="TabStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"/>
@@ -184,7 +185,8 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="150" Height="150">
+                        <Grid Width="{Binding ActualWidth, ElementName=ImageGrid, Converter={StaticResource CardConv}}"
+                              Height="{Binding ActualWidth, ElementName=ImageGrid, Converter={StaticResource CardConv}}">
                             <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
                             <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"

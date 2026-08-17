@@ -33,9 +33,18 @@ public sealed class ClipboardMonitor : IDisposable
         NativeMethods.AddClipboardFormatListener(_source.Handle);
     }
 
-    // 自写剪贴板：用时间窗口忽略后续所有通知（一次写入可能触发多次 WM_CLIPBOARDUPDATE）
-    public void BeginSelfWrite() => _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(800).Ticks;
-    public void EndSelfWrite() => _selfWriteUntilTicks = 0;
+    // 自写剪贴板：临时注销监听（彻底收不到自身写入的通知）+ 时间窗兜底
+    public void BeginSelfWrite()
+    {
+        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(3000).Ticks;
+        if (_source != null) NativeMethods.RemoveClipboardFormatListener(_source.Handle);
+    }
+
+    public void EndSelfWrite()
+    {
+        _selfWriteUntilTicks = 0;
+        if (_source != null) NativeMethods.AddClipboardFormatListener(_source.Handle);
+    }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

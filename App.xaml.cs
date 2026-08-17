@@ -223,6 +223,7 @@ public partial class App : System.Windows.Application
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
         _shutdown = true;
+        try { Services.Settings?.SaveNow(); } catch { }
         try { Services.Store?.Dispose(); } catch { }
         try { Services.Hotkeys?.Dispose(); } catch { }
         try { Services.Monitor?.Dispose(); } catch { }

@@ -47,8 +47,16 @@ public sealed class SettingsStore
 
     public void Save()
     {
+        _saveTimer ??= new System.Threading.Timer(_ => SaveNow(), null, Timeout.Infinite, Timeout.Infinite);
+        _saveTimer.Change(500, Timeout.Infinite);
+    }
+
+    public void SaveNow()
+    {
         SaveInternal(Current);
     }
+
+    private System.Threading.Timer? _saveTimer;
 
     private void SaveInternal(Settings s)
     {

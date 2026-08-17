@@ -517,7 +517,7 @@ public partial class MainWindow : Window
     {
         var entry = Selected;
         if (entry == null) return;
-        Services.Writer.SetData(Paster.BuildDataObject(entry, false));
+        Services.Writer.SetData(Paster.BuildDataObject(entry, false), copy: false);
         NativeMethods.SendCtrlV();
         HideBar();
     }
