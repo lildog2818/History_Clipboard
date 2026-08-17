@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Icon = App.LoadAppIcon();
         Services.Store.Changed += OnStoreChanged;
         ApplySavedSize();
         TextTab.IsChecked = true;

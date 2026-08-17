@@ -5,7 +5,7 @@
         xmlns:local="clr-namespace:ClipboardHistory"
         Title="剪贴板历史" Width="460" Height="720" MinWidth="360" MinHeight="500"
         WindowStyle="None" AllowsTransparency="False" Background="Transparent"
-        Topmost="True" ShowInTaskbar="False" ResizeMode="CanResize" Icon="Assets/App.ico"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="CanResize"
         ShowActivated="True" Loaded="Window_Loaded" Deactivated="Window_Deactivated">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6" GlassFrameThickness="0"

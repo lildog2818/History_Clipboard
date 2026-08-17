@@ -13,6 +13,31 @@ public partial class App : System.Windows.Application
     private NotifyIcon? _tray;
     private volatile bool _shutdown;
 
+    // 从 exe 自身的 Win32 图标加载窗口图标（单文件发布下也可用，不依赖 pack URI 资源）
+    public static System.Windows.Media.ImageSource? LoadAppIcon()
+    {
+        try
+        {
+            var path = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(path)) return null;
+            using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
+            if (icon == null) return null;
+            using var bmp = icon.ToBitmap();
+            IntPtr hbmp = bmp.GetHbitmap();
+            try
+            {
+                return System.Windows.Interop.Imaging.CreateBitmapSourceFromHBitmap(
+                    hbmp, IntPtr.Zero, System.Windows.Int32Rect.Empty,
+                    System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+            }
+            finally
+            {
+                NativeMethods.DeleteObject(hbmp);
+            }
+        }
+        catch { return null; }
+    }
+
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
         base.OnStartup(e);
