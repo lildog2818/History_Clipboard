@@ -26,7 +26,9 @@ public sealed class Paster
 
     public void Paste(ClipEntry entry, bool asPlainText)
     {
-        Services.Writer.SetData(BuildDataObject(entry, asPlainText));
+        Services.Writer.SetData(
+            () => BuildDataObject(entry, asPlainText),
+            asPlainText ? Hash.OfText(entry.PlainText) : null);
         _pending = entry;
         _pasteTimer.Start();
     }
@@ -47,7 +49,7 @@ public sealed class Paster
     private void DoRestore()
     {
         if (_restoreEntry == null) return;
-        Services.Writer.SetData(BuildDataObject(_restoreEntry, false));
+        Services.Writer.SetData(() => BuildDataObject(_restoreEntry, false), null);
         _restoreEntry = null;
     }
 

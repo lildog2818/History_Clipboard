@@ -15,7 +15,6 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <local:ImagePathConverter x:Key="ImgConv"/>
         <local:HighlightConverter x:Key="HlConv"/>
-        <local:CardWidthConverter x:Key="CardConv"/>
 
         <Style x:Key="TabStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource SecondaryBrush}"/>
@@ -171,13 +170,28 @@
 
             <!-- 图片页（卡片网格） -->
             <ListBox x:Name="ImageGrid" Grid.Row="3" Background="Transparent" BorderThickness="0" Margin="8,0,8,0"
-                     Visibility="Collapsed" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     Visibility="Collapsed"
                      PreviewMouseLeftButtonDown="ImageGrid_PreviewMouseLeftButtonDown"
                      PreviewMouseRightButtonUp="ImageGrid_RightClick"
                      PreviewKeyDown="List_PreviewKeyDown" SelectionChanged="ImageGrid_SelectionChanged">
+                <!-- 自定义模板：ScrollViewer 顶部对齐，保证卡片从最上面开始逐行排列（不竖向居中） -->
+                <ListBox.Template>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer Focusable="False" Padding="{TemplateBinding Padding}"
+                                          HorizontalScrollBarVisibility="Disabled"
+                                          VerticalScrollBarVisibility="Auto"
+                                          VerticalContentAlignment="Top">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </ListBox.Template>
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel/>
+                        <local:CardWrapPanel/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemContainerStyle>
@@ -185,8 +199,9 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid Width="{Binding ActualWidth, ElementName=ImageGrid, Converter={StaticResource CardConv}}"
-                              Height="{Binding ActualWidth, ElementName=ImageGrid, Converter={StaticResource CardConv}}">
+                        <!-- 卡片尺寸由 CardWrapPanel 在布局时直接计算（每行 2 张方形大图），
+                             切换页签时不会出现卡片变小的问题 -->
+                        <Grid>
                             <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
                             <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"

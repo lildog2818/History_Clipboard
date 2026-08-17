@@ -93,7 +93,7 @@ public partial class MainWindow : Window
     {
         ToastText.Text = message;
         Toast.Visibility = Visibility.Visible;
-        _toastTimer ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.4) };
+        _toastTimer ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _toastTimer.Stop();
         _toastTimer.Tick -= OnToastTick;
         _toastTimer.Tick += OnToastTick;
@@ -216,6 +216,9 @@ public partial class MainWindow : Window
         FileList.Visibility = kind == TabKind.File ? Visibility.Visible : Visibility.Collapsed;
         SelectFirstInActiveTab();
         UpdateStatus();
+        // 每次切换页签都强制刷新预览：
+        // 图片页自动隐藏预览框；文字/文件页立即显示各自对应的内容，避免残留上一页签的内容
+        UpdatePreview(ActiveList.SelectedItem as ClipEntry);
     }
 
     private ListBox ActiveList => _activeTab switch
@@ -388,16 +391,20 @@ public partial class MainWindow : Window
 
     // ---------- 鼠标 ----------
 
-    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick();
-    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick();
+    private void TextList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick(TextList, e);
+    private void FileList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => ItemDoubleClick(FileList, e);
 
-    // 双击：快捷键唤起=直接粘贴到焦点；托盘打开=复制
-    private void ItemDoubleClick()
+    // 双击：快捷键唤起=直接粘贴到焦点；托盘打开=复制。
+    // 取鼠标点中的条目（而非当前选中项），保证点哪条就粘贴/复制哪条
+    private void ItemDoubleClick(ListBox list, MouseButtonEventArgs e)
     {
         try
         {
-            if (_pasteMode) PasteToFocus();
-            else CopySelected();
+            var item = ItemsControl.ContainerFromElement(list, e.OriginalSource as DependencyObject) as ListBoxItem;
+            var entry = item?.DataContext as ClipEntry ?? list.SelectedItem as ClipEntry;
+            if (entry == null) return;
+            if (_pasteMode) PasteToFocus(entry);
+            else CopyEntry(entry);
         }
         catch (Exception ex)
         {
@@ -405,23 +412,28 @@ public partial class MainWindow : Window
         }
     }
 
-    // 图片卡片：单击=贴图（大图），双击=粘贴/复制
+    // 图片卡片：单击=贴图（大图），双击=粘贴/复制（同样取鼠标点中的条目）
     private void ImageGrid_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2)
         {
             _clickTimer?.Stop();
-            if (_pasteMode) PasteToFocus(); else CopySelected();
+            var item = ItemsControl.ContainerFromElement(ImageGrid, e.OriginalSource as DependencyObject) as ListBoxItem;
+            var entry = item?.DataContext as ClipEntry ?? ImageGrid.SelectedItem as ClipEntry;
+            if (entry != null)
+            {
+                if (_pasteMode) PasteToFocus(entry); else CopyEntry(entry);
+            }
             return;
         }
 
-        var item = ItemsControl.ContainerFromElement(ImageGrid, e.OriginalSource as DependencyObject) as ListBoxItem;
-        if (item == null) return;
-        var entry = item.DataContext as ClipEntry;
-        if (entry == null) return;
-        item.IsSelected = true;
+        var item2 = ItemsControl.ContainerFromElement(ImageGrid, e.OriginalSource as DependencyObject) as ListBoxItem;
+        if (item2 == null) return;
+        var entry2 = item2.DataContext as ClipEntry;
+        if (entry2 == null) return;
+        item2.IsSelected = true;
 
-        _pendingPinEntry = entry;
+        _pendingPinEntry = entry2;
         _clickTimer ??= new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(260) };
         _clickTimer.Stop();
         _clickTimer.Tick -= OnPinTick;
@@ -520,16 +532,26 @@ public partial class MainWindow : Window
     }
 
     // 直接粘贴到当前焦点窗口（用于快捷键唤起的“不抢焦点”模式）
-    private void PasteToFocus()
+    private void PasteToFocus(ClipEntry entry)
     {
-        var entry = Selected;
         if (entry == null) return;
         try
         {
             Services.Monitor.RememberSelfEntry(entry);
-            Services.Writer.SetData(Paster.BuildDataObject(entry, false));
-            NativeMethods.SendCtrlV();
-            HideBar();
+            // 写入在后台线程完成，写完后才发 Ctrl+V，避免剪贴板被占用时卡住 UI
+            Services.Writer.SetData(
+                () => Paster.BuildDataObject(entry, false),
+                SelfWriteHashOf(entry),
+                onWritten: () =>
+                {
+                    NativeMethods.SendCtrlV();
+                    HideBar();
+                },
+                onError: ex =>
+                {
+                    Logger.Error("粘贴失败", ex);
+                    ShowToast("粘贴失败");
+                });
         }
         catch (Exception ex)
         {
@@ -553,8 +575,12 @@ public partial class MainWindow : Window
         try
         {
             Services.Monitor.RememberSelfEntry(entry);
-            Services.Writer.SetData(Paster.BuildDataObject(entry, false));
-            ShowToast("已复制");
+            // 写入在后台线程完成，写入成功后提示，UI 不会被剪贴板占用阻塞
+            Services.Writer.SetData(
+                () => Paster.BuildDataObject(entry, false),
+                SelfWriteHashOf(entry),
+                onWritten: () => ShowToast("已复制"),
+                onError: _ => ShowToast("复制失败"));
         }
         catch (Exception ex)
         {
@@ -562,6 +588,10 @@ public partial class MainWindow : Window
             ShowToast("复制失败");
         }
     }
+
+    // 文本条目可用文本哈希直接比对，避免自写重复入库；图片/文件靠内容比对
+    private static string? SelfWriteHashOf(ClipEntry entry)
+        => entry.IsImage || entry.IsFileList ? null : Hash.OfText(entry.PlainText);
 
     private void TogglePinSelected()
     {

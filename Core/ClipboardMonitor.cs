@@ -14,6 +14,7 @@ public sealed class ClipboardMonitor : IDisposable
     private readonly ClipboardStore _store;
     private HwndSource? _source;
     private long _selfWriteUntilTicks;
+    private bool _selfWritePending;
     private string _selfWriteHash = "";
     private ClipEntry? _selfEntry;
 
@@ -35,14 +36,32 @@ public sealed class ClipboardMonitor : IDisposable
         NativeMethods.AddClipboardFormatListener(_source.Handle);
     }
 
-    // 自写剪贴板：时间窗（60s）+ 内容比对双保险，避免自身写入被重复记录
+    // 自写剪贴板守卫：
+    //  WM_CLIPBOARDUPDATE 是异步投递的（SetData 返回后才在 UI 线程收到），
+    //  因此不能靠“写入完成后立刻结束时间窗”（那会让图片/文件的自写更新漏网）。
+    //  方案：
+    //   1) 消费“下一次”剪贴板更新消息并忽略（5s 窗口内到达才算自写）；
+    //   2) 内容比对（文本哈希/文件列表/图片哈希+像素）作双保险；
+    //   3) 写入失败时调用 CancelSelfWrite，避免误吞用户下一次真实复制。
     public void BeginSelfWrite(string? contentHash = null)
     {
-        _selfWriteUntilTicks = DateTime.UtcNow.AddMilliseconds(60_000).Ticks;
+        _selfWritePending = true;
+        _selfWriteUntilTicks = DateTime.UtcNow.AddSeconds(5).Ticks;
         if (!string.IsNullOrEmpty(contentHash)) _selfWriteHash = contentHash;
     }
 
-    public void EndSelfWrite() => _selfWriteUntilTicks = 0;
+    public void EndSelfWrite()
+    {
+        // 更新消息此刻可能尚未到达，不在此清除守卫；由下一次 WM_CLIPBOARDUPDATE 消费。
+    }
+
+    public void CancelSelfWrite()
+    {
+        _selfWritePending = false;
+        _selfWriteUntilTicks = 0;
+        _selfEntry = null;
+        _selfWriteHash = "";
+    }
 
     // 记录本次自写对应的原条目，用于捕获时按内容比对（文本/文件列表/图片像素）
     public void RememberSelfEntry(ClipEntry entry) => _selfEntry = entry;
@@ -51,8 +70,13 @@ public sealed class ClipboardMonitor : IDisposable
     {
         if (msg == NativeMethods.WM_CLIPBOARDUPDATE)
         {
-            if (DateTime.UtcNow.Ticks < _selfWriteUntilTicks)
-                return IntPtr.Zero; // 忽略自写
+            if (_selfWritePending)
+            {
+                _selfWritePending = false;
+                if (DateTime.UtcNow.Ticks < _selfWriteUntilTicks)
+                    return IntPtr.Zero; // 消费本次自写产生的更新，忽略
+                // 超时后才到达：交给下方内容比对兜底
+            }
             CaptureWithRetry();
         }
         return IntPtr.Zero;
@@ -70,8 +94,7 @@ public sealed class ClipboardMonitor : IDisposable
                     var entry = BuildEntry(data);
                     if (entry != null)
                     {
-                        if (!string.IsNullOrEmpty(_selfWriteHash) && entry.Hash == _selfWriteHash) return; // 自写内容(文本)
-                        if (IsSelfWrittenDuplicate(entry)) return; // 自写内容(文件/图片按内容比对)
+                        if (IsSelfWrite(entry)) return; // 自写内容（文本/文件/图片）
                         if (entry.Hash == _store.LatestHash) return; // consecutive duplicate
                         _store.Add(entry);
                         EntryAdded?.Invoke(entry);
@@ -88,17 +111,18 @@ public sealed class ClipboardMonitor : IDisposable
         }
     }
 
-    // 捕获内容是否等于最近一次自写（复制/粘贴/截图）的条目内容
-    private bool IsSelfWrittenDuplicate(ClipEntry captured)
+    // 捕获内容是否等于最近一次自写（时间窗内）：文本哈希 / 文件列表 / 图片哈希+像素
+    private bool IsSelfWrite(ClipEntry captured)
     {
         if (DateTime.UtcNow.Ticks >= _selfWriteUntilTicks) return false;
+        if (!string.IsNullOrEmpty(_selfWriteHash) && captured.Hash == _selfWriteHash) return true;
         var self = _selfEntry;
         if (self == null) return false;
 
         if (captured.IsFileList && self.IsFileList)
             return captured.Files.SequenceEqual(self.Files);
         if (captured.IsImage && self.IsImage)
-            return ImagesEqual(self, captured);
+            return captured.Hash == self.Hash || ImagesEqual(self, captured);
         return captured.PlainText == self.PlainText;
     }
 

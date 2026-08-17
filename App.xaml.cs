@@ -234,6 +234,7 @@ public partial class App : System.Windows.Application
         try { Services.Store?.Dispose(); } catch { }
         try { Services.Hotkeys?.Dispose(); } catch { }
         try { Services.Monitor?.Dispose(); } catch { }
+        try { Services.Writer?.Dispose(); } catch { }
         try { _tray?.Dispose(); } catch { }
         SingleInstance.Release();
         base.OnExit(e);
