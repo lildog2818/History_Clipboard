@@ -48,7 +48,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Bd" Background="{DynamicResource SurfaceBrush}" CornerRadius="8"
-                                BorderThickness="2" BorderBrush="Transparent">
+                                BorderThickness="2" BorderBrush="Transparent" ClipToBounds="True">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
