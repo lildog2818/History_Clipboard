@@ -48,7 +48,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="Bd" Background="{DynamicResource SurfaceBrush}" CornerRadius="8"
-                                BorderThickness="2" BorderBrush="Transparent" ClipToBounds="True">
+                                BorderThickness="2" BorderBrush="Transparent">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -200,9 +200,16 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <!-- 卡片尺寸由 CardWrapPanel 在布局时直接计算（每行 2 张方形大图），
-                             切换页签时不会出现卡片变小的问题 -->
+                             切换页签时不会出现卡片变小的问题。
+                             图片用 Border.ImageBrush 背景实现圆角（ImageBrush 按 Border 的
+                             CornerRadius 圆角矩形绘制，ClipToBounds 不生效）。 -->
                         <Grid>
-                            <Image Source="{Binding ImageFile, Converter={StaticResource ImgConv}}" Stretch="UniformToFill"/>
+                            <Border CornerRadius="8">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding ImageFile, Converter={StaticResource ImgConv}}"
+                                                Stretch="UniformToFill"/>
+                                </Border.Background>
+                            </Border>
                             <TextBlock Text="&#xE718;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                        Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Left"
                                        VerticalAlignment="Top" Margin="6" Visibility="{Binding Pinned, Converter={StaticResource BoolToVis}}"/>
