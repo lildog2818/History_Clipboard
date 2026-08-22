@@ -115,8 +115,8 @@ public partial class ScreenshotOverlay : Window
         SetRect(SelBorder, x, y, sw, sh);
 
         SizeLabel.Visibility = Visibility.Visible;
-        SizeLabel.Text = $"{(int)(sw * _scale)} × {(int)(sh * _scale)}";
-        SetPos(SizeLabel, x, Math.Max(0, y - 24));
+        SizeText.Text = $"{(int)(sw * _scale)} × {(int)(sh * _scale)}";
+        SetPos(SizeLabel, x, Math.Max(0, y - 26));
     }
 
     private void ShowToolbar()

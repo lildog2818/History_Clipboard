@@ -269,6 +269,7 @@ public partial class MainWindow : Window
             .OrderByDescending(e => e.Pinned).ThenByDescending(e => e.CreatedAt).ToList();
 
         SelectFirstInActiveTab();
+        UpdateStatus();
     }
 
     private static bool Matches(ClipEntry e, string q)
@@ -521,7 +522,8 @@ public partial class MainWindow : Window
         }
 
         PreviewNote.Text = string.IsNullOrEmpty(entry.Note) ? "" : entry.Note;
-        PreviewMeta.Text = $" · {entry.CreatedAt:MM-dd HH:mm} · {entry.SourceApp}";
+        NoteChip.Visibility = string.IsNullOrEmpty(entry.Note) ? Visibility.Collapsed : Visibility.Visible;
+        PreviewMeta.Text = $"{entry.CreatedAt:MM-dd HH:mm} · {entry.SourceApp}";
     }
 
     // ---------- 操作 ----------

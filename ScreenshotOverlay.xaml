@@ -4,6 +4,43 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
         Cursor="Cross" ShowActivated="True" KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <!-- 截图浮层固定深色工具栏按钮（不随主题切换，保证截图背景上可读） -->
+        <Style x:Key="ShotBtnBase" TargetType="Button">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="6" Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderThickness="1" BorderBrush="#33FFFFFF">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ShotBtnPrimary" TargetType="Button" BasedOn="{StaticResource ShotBtnBase}">
+            <Setter Property="Background" Value="#FF0F6CBD"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="ShotBtnQuiet" TargetType="Button" BasedOn="{StaticResource ShotBtnBase}">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="#FFFFFFFF"/>
+        </Style>
+    </Window.Resources>
     <Canvas x:Name="Root" Background="Transparent"
             MouseLeftButtonDown="Root_MouseLeftButtonDown"
             MouseMove="Root_MouseMove"
@@ -13,12 +50,17 @@
         <Rectangle x:Name="DimBottom" Fill="#66000000"/>
         <Rectangle x:Name="DimLeft" Fill="#66000000"/>
         <Rectangle x:Name="DimRight" Fill="#66000000"/>
-        <Rectangle x:Name="SelBorder" Stroke="#FF3B82F6" StrokeThickness="1.5" Visibility="Collapsed"/>
-        <TextBlock x:Name="SizeLabel" Foreground="White" FontSize="12" Background="#99000000" Padding="6,2" Visibility="Collapsed"/>
-        <StackPanel x:Name="Toolbar" Orientation="Horizontal" Visibility="Collapsed"
-                    Background="#F21E1E1E">
-            <Button Content="贴图" Click="Pin_Click" Margin="4" Padding="16,6" FontSize="14"/>
-            <Button Content="取消" Click="Cancel_Click" Margin="4" Padding="16,6" FontSize="14"/>
-        </StackPanel>
+        <Rectangle x:Name="SelBorder" Stroke="#FF60CDFF" StrokeThickness="1.5" Visibility="Collapsed"/>
+        <Border x:Name="SizeLabel" Background="#CC1A1A1A" CornerRadius="4" Padding="7,3"
+                Visibility="Collapsed">
+            <TextBlock x:Name="SizeText" Text="" Foreground="#FFF5F5F5" FontSize="11.5"/>
+        </Border>
+        <Border x:Name="Toolbar" Visibility="Collapsed" CornerRadius="10" Padding="6"
+                Background="#F2242424" BorderBrush="#24FFFFFF" BorderThickness="1">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="贴图" Click="Pin_Click" Margin="2,0" Style="{StaticResource ShotBtnPrimary}"/>
+                <Button Content="取消" Click="Cancel_Click" Margin="2,0" Style="{StaticResource ShotBtnQuiet}"/>
+            </StackPanel>
+        </Border>
     </Canvas>
 </Window>

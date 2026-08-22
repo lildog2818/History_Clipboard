@@ -5,12 +5,39 @@
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
         PreviewKeyDown="Window_PreviewKeyDown"
         MouseEnter="Window_MouseEnter" MouseLeave="Window_MouseLeave">
+    <Window.Resources>
+        <Style x:Key="PinCloseBtn" TargetType="Button">
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="14" Background="#B4000000"
+                                BorderBrush="#33FFFFFF" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E81123"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F1707A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Border Background="#14000000" BorderBrush="#66000000" BorderThickness="1">
         <Grid>
             <Image x:Name="Img" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
-            <Button x:Name="CloseBtn" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12"
-                    Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="4"
-                    Background="#AA000000" Foreground="White" BorderThickness="0" Cursor="Hand"
+            <Button x:Name="CloseBtn" Content="&#xE8BB;" Style="{StaticResource PinCloseBtn}"
+                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="6"
                     Click="Close_Click" Visibility="Collapsed"/>
         </Grid>
     </Border>

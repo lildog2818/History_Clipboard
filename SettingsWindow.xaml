@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:local="clr-namespace:ClipboardHistory"
-        Title="设置" Width="560" Height="660"
+        Title="设置" Width="640" Height="660"
         WindowStyle="None" AllowsTransparency="False" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowActivated="True" Loaded="Window_Loaded">
@@ -11,6 +11,26 @@
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="0"
                             CornerRadius="10" UseAeroCaptionButtons="False"/>
     </shell:WindowChrome.WindowChrome>
+    <Window.Resources>
+        <!-- 分区标题：强调色短条 + 标题 -->
+        <Style x:Key="SectionHead" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+        <!-- 设置行：标签 + 控件 -->
+        <Style x:Key="RowLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource ForegroundBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+    </Window.Resources>
     <Border Background="{DynamicResource PanelBackground}" BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1" CornerRadius="10">
         <Grid>
@@ -20,94 +40,147 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Height="42" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
-                <TextBlock Text="设置" FontSize="14" FontWeight="SemiBold"
-                           Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="14,0,0,0"/>
+            <!-- 标题栏 -->
+            <Grid Grid.Row="0" Height="46" Background="Transparent" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <TextBlock Text="设置" FontSize="15" FontWeight="SemiBold"
+                           Foreground="{DynamicResource ForegroundBrush}" VerticalAlignment="Center" Margin="16,0,0,0"/>
                 <Button Style="{StaticResource WinBtnClose}" Content="&#xE8BB;" HorizontalAlignment="Right"
                         VerticalAlignment="Center" Margin="0,0,6,0" Click="Close_Click"/>
             </Grid>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="4,0,4,0">
-                <StackPanel Margin="12,2,12,8">
-                    <TextBlock Text="快捷键" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,12,0,6"/>
-                    <Grid Margin="0,4,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="唤起面板" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                        <local:HotkeyBox Grid.Column="1" x:Name="SearchHotkeyBox"/>
-                    </Grid>
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="截图" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                        <local:HotkeyBox Grid.Column="1" x:Name="ScreenshotHotkeyBox"/>
-                    </Grid>
+                <StackPanel Margin="12,2,12,10">
 
-                    <TextBlock Text="外观" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
-                    <Grid Margin="0,4,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="主题" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                        <ComboBox Grid.Column="1" x:Name="ThemeCombo" Height="34" FontSize="14"/>
-                    </Grid>
+                    <!-- 快捷键 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="快捷键"/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="唤起面板"/>
+                                <local:HotkeyBox Grid.Column="1" x:Name="SearchHotkeyBox"/>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="截图"/>
+                                <local:HotkeyBox Grid.Column="1" x:Name="ScreenshotHotkeyBox"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
-                    <TextBlock Text="存储" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
-                    <Grid Margin="0,4,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="保存目录" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                        <TextBox Grid.Column="1" x:Name="DataDirBox" Height="34" VerticalContentAlignment="Center" FontSize="13"/>
-                        <Button Grid.Column="2" Content="浏览…" Height="34" Margin="8,0,0,0" Padding="12,0" Click="Browse_Click"/>
-                    </Grid>
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="120"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="条数上限" VerticalAlignment="Center" Foreground="{DynamicResource ForegroundBrush}" FontSize="14"/>
-                        <ComboBox Grid.Column="1" x:Name="MaxEntriesCombo" Height="34" FontSize="14"/>
-                    </Grid>
+                    <!-- 外观 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="外观"/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="主题"/>
+                                <ComboBox Grid.Column="1" x:Name="ThemeCombo"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
-                    <TextBlock Text="行为" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
-                    <CheckBox x:Name="RestoreClipboardBox" Content="粘贴后还原剪贴板" FontSize="14" Margin="0,4,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                    <CheckBox x:Name="QuickPasteBox" Content="1-9 快速粘贴" FontSize="14" Margin="0,8,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
-                    <CheckBox x:Name="PlainTextOnlyBox" Content="仅记录纯文本（不存富文本格式）" FontSize="14" Margin="0,8,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                    <!-- 存储 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="存储"/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="保存目录"/>
+                                <TextBox Grid.Column="1" x:Name="DataDirBox" Height="34" FontSize="12.5"/>
+                                <Button Grid.Column="2" Content="浏览…" Height="34" Margin="8,0,0,0" Padding="12,0" Click="Browse_Click"/>
+                            </Grid>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="条数上限"/>
+                                <ComboBox Grid.Column="1" x:Name="MaxEntriesCombo"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
 
-                    <TextBlock Text="隐私" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
-                    <TextBlock Text="不记录以下应用的复制内容（进程名，如 KeePass）" FontSize="12"
-                               Foreground="{DynamicResource SecondaryBrush}" Margin="0,2,0,4"/>
-                    <ListBox x:Name="ExcludedList" Height="90" FontSize="13" BorderBrush="{DynamicResource BorderBrush}"
-                             Background="{DynamicResource SurfaceBrush}" Foreground="{DynamicResource ForegroundBrush}"/>
-                    <Grid Margin="0,8,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="ExcludedInput" Height="34" VerticalContentAlignment="Center" FontSize="13" PreviewKeyDown="ExcludedInput_KeyDown"/>
-                        <Button Grid.Column="1" Content="添加" Height="34" Margin="8,0,0,0" Padding="12,0" Click="AddExcluded_Click"/>
-                        <Button Grid.Column="2" Content="移除" Height="34" Margin="8,0,0,0" Padding="12,0" Click="RemoveExcluded_Click"/>
-                    </Grid>
+                    <!-- 行为 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="行为"/>
+                            </StackPanel>
+                            <CheckBox x:Name="RestoreClipboardBox" Content="粘贴后还原剪贴板"/>
+                            <CheckBox x:Name="QuickPasteBox" Content="1-9 快速粘贴" Margin="0,10,0,0"/>
+                            <CheckBox x:Name="PlainTextOnlyBox" Content="仅记录纯文本（不存富文本格式）" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
 
-                    <TextBlock Text="常规" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Margin="0,16,0,6"/>
-                    <CheckBox x:Name="AutoStartBox" Content="开机自启" FontSize="14" Margin="0,4,0,0" Foreground="{DynamicResource ForegroundBrush}"/>
+                    <!-- 隐私 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="隐私"/>
+                            </StackPanel>
+                            <TextBlock Text="不记录以下应用的复制内容（进程名，如 KeePass）" FontSize="11.5"
+                                       Foreground="{DynamicResource SecondaryBrush}" Margin="0,0,0,8"/>
+                            <ListBox x:Name="ExcludedList" Height="96" FontSize="12.5"/>
+                            <Grid Margin="0,10,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="ExcludedInput" Height="34" FontSize="12.5" PreviewKeyDown="ExcludedInput_KeyDown"/>
+                                <Button Grid.Column="1" Content="添加" Height="34" Margin="8,0,0,0" Padding="14,0" Click="AddExcluded_Click"/>
+                                <Button Grid.Column="2" Content="移除" Height="34" Margin="8,0,0,0" Padding="14,0" Click="RemoveExcluded_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 常规 -->
+                    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="10" Padding="16,14">
+                        <StackPanel>
+                            <StackPanel Style="{StaticResource SectionHead}">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource AccentBrush}"/>
+                                <TextBlock Style="{StaticResource SectionTitle}" Text="常规"/>
+                            </StackPanel>
+                            <CheckBox x:Name="AutoStartBox" Content="开机自启"/>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ScrollViewer>
 
-            <Grid Grid.Row="2" Margin="14,8,14,12">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="取消" Width="80" Height="34" Margin="0,0,8,0" Click="Cancel_Click"/>
-                    <Button Content="保存" Width="80" Height="34" Background="{DynamicResource AccentBrush}"
-                            Foreground="White" Click="Save_Click"/>
+            <!-- 底部操作区 -->
+            <Grid Grid.Row="2" Margin="16,10,16,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+                    <Button Content="取消" Width="84" Height="34" Margin="0,0,10,0" Click="Cancel_Click"/>
+                    <Button Content="保存" Width="84" Height="34" Style="{StaticResource AccentButton}" Click="Save_Click"/>
                 </StackPanel>
             </Grid>
         </Grid>

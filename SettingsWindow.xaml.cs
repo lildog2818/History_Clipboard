@@ -48,6 +48,7 @@ public partial class SettingsWindow : Window
         SelectComboByTag(MaxEntriesCombo, s.MaxEntries);
 
         DataDirBox.Text = s.DataDirectory;
+        DataDirBox.CaretIndex = DataDirBox.Text.Length; // 长路径显示末段（目录名）
         RestoreClipboardBox.IsChecked = s.RestoreClipboardAfterPaste;
         QuickPasteBox.IsChecked = s.QuickPasteNumberKeys;
         PlainTextOnlyBox.IsChecked = s.PlainTextOnly;
