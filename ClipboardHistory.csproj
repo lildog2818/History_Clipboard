@@ -13,7 +13,7 @@
     <ApplicationIcon>Assets\App.ico</ApplicationIcon>
     <AssemblyTitle>ClipboardHistory</AssemblyTitle>
     <Product>ClipboardHistory</Product>
-    <Version>1.3.6</Version>
+    <Version>1.4.0</Version>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <NoWarn>$(NoWarn);WFAC010</NoWarn>
   </PropertyGroup>

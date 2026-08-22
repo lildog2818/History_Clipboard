@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using System.Windows.Media.Imaging;
 
 namespace ClipboardHistory.Core;
 
@@ -23,6 +25,35 @@ public sealed class ClipEntry
     public bool IsImage => !string.IsNullOrEmpty(ImageFile);
     public bool IsFileList => Files is { Length: > 0 };
     public bool IsRich => !string.IsNullOrEmpty(Html) || !string.IsNullOrEmpty(Rtf);
+
+    private static readonly ConcurrentDictionary<string, (double W, double H)> ImageSizeCache = new();
+
+    // 图片原始显示尺寸（WPF 设备无关单位，已按图片自身 DPI 换算），按文件路径缓存。
+    // 供 CardWrapPanel 在大窗口/全屏模式下按原图尺寸排布卡片；加载失败返回 null。
+    public (double Width, double Height)? GetImageDisplaySize()
+    {
+        if (string.IsNullOrEmpty(ImageFile)) return null;
+        var dir = Path.GetDirectoryName(ClipboardStore.ImagesDirectory);
+        if (string.IsNullOrEmpty(dir)) return null;
+        var full = Path.Combine(dir, ImageFile);
+        var s = ImageSizeCache.GetOrAdd(full, static p =>
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.UriSource = new Uri(p, UriKind.Absolute);
+                bmp.EndInit();
+                bmp.Freeze();
+                double dx = bmp.DpiX > 0 ? bmp.DpiX : 96;
+                double dy = bmp.DpiY > 0 ? bmp.DpiY : 96;
+                return (bmp.PixelWidth * 96.0 / dx, bmp.PixelHeight * 96.0 / dy);
+            }
+            catch { return (0d, 0d); }
+        });
+        return s.W > 0 && s.H > 0 ? s : null;
+    }
 
     public string TypeBadge =>
         IsFileList ? "文件" : IsImage ? "图片" : IsRich ? "富文本" : "文本";

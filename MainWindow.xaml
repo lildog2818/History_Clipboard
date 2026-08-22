@@ -199,8 +199,8 @@
                 </ListBox.ItemContainerStyle>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <!-- 卡片尺寸由 CardWrapPanel 在布局时直接计算（每行 2 张方形大图），
-                             切换页签时不会出现卡片变小的问题。
+                        <!-- 卡片尺寸由 CardWrapPanel 在布局时计算：
+                             常规窗口为每行 2 张方形缩略图；大窗口/最大化按图片原始尺寸流式排布。
                              图片用 Border.ImageBrush 背景实现圆角（ImageBrush 按 Border 的
                              CornerRadius 圆角矩形绘制，ClipToBounds 不生效）。 -->
                         <Grid>

@@ -87,16 +87,21 @@ public sealed class ClipboardStore : IDisposable
         return entry;
     }
 
+    // 删除 = 永久删除：图片文件直接物理删除（不进回收站），
+    // 并立即同步写盘 history.json（不走 500ms 延迟保存，
+    // 避免删除后程序立刻退出时旧数据未落盘导致条目"复活"）
     public void Remove(Guid id)
     {
+        bool removed = false;
         lock (_lock)
         {
             var e = _entries.FirstOrDefault(x => x.Id == id);
             if (e == null) return;
             if (e.ImageFile != null) TryDeleteFile(ResolveImage(e.ImageFile));
             _entries.Remove(e);
+            removed = true;
         }
-        ScheduleSave();
+        if (removed) SaveNow();
         Changed?.Invoke();
     }
 
@@ -111,7 +116,7 @@ public sealed class ClipboardStore : IDisposable
                 _entries.Remove(e);
             }
         }
-        ScheduleSave();
+        SaveNow();
         Changed?.Invoke();
     }
 
@@ -214,7 +219,20 @@ public sealed class ClipboardStore : IDisposable
 
     private static void TryDeleteFile(string path)
     {
-        try { if (File.Exists(path)) File.Delete(path); } catch { }
+        // 文件可能被杀毒/索引服务短暂占用：重试几次确保真正删除
+        for (int i = 0; i < 3; i++)
+        {
+            try
+            {
+                if (!File.Exists(path)) return;
+                File.Delete(path);
+                return;
+            }
+            catch
+            {
+                Thread.Sleep(60);
+            }
+        }
     }
 
     private void ScheduleSave()
